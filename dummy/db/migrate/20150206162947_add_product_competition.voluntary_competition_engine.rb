@@ -18,5 +18,7 @@ class AddProductCompetition < ActiveRecord::Migration
   
   def down
     Product.where(name: 'Competition').first.destroy
+    
+    drop_table :competitors
   end
 end
