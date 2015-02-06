@@ -7,6 +7,7 @@ module VoluntaryCompetition
           
           included do
             has_many :competitors, dependent: :destroy
+            has_many :tournaments, dependent: :destroy
           end
         end
       end

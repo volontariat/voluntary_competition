@@ -1,0 +1,15 @@
+en:
+  tournaments:
+    index:
+      title: Tournaments
+      name: Name
+      empty_collection: No tournaments available.
+      
+    new: 
+      title: New Tournament
+    edit: 
+      title: Edit Tournament
+      
+  activerecord:
+    models:
+      tournament: Tournament

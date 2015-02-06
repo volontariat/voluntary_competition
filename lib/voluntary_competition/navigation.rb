@@ -5,6 +5,21 @@ module VoluntaryCompetition
         navigation.items do |primary|
           primary.dom_class = 'nav'
           
+          primary.item :tournaments, I18n.t('tournaments.index.title'), competition_tournaments_path do |tournaments|
+            tournaments.item :new, I18n.t('general.new'), new_competition_tournament_path if user_signed_in?
+            
+            unless (@tournament.new_record? rescue true)
+              tournaments.item :show, @tournament.name, competition_tournament_path(@tournament) do |tournament|
+                if can? :destroy, @tournament
+                  tournament.item :destroy, I18n.t('general.destroy'), competition_tournament_path(@tournament), method: :delete, confirm: I18n.t('general.questions.are_you_sure')
+                end
+      
+                tournament.item :show, I18n.t('general.details'), "#{competition_tournament_path(@tournament)}#top"
+                tournament.item :edit, I18n.t('general.edit'), edit_competition_tournament_path(@tournament) if can? :edit, @tournament
+              end
+            end
+          end
+          
           primary.item :competitors, I18n.t('competitors.index.title'), competition_competitors_path do |competitors|
             competitors.item :new, I18n.t('general.new'), new_competition_competitor_path if user_signed_in?
             
