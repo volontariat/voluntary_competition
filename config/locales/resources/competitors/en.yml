@@ -1,0 +1,15 @@
+en:
+  competitors:
+    index:
+      title: Competitors
+      name: Name
+      empty_collection: No competitors available.
+      
+    new: 
+      title: New Competitor
+    edit: 
+      title: Edit Competitor
+      
+  activerecord:
+    models:
+      competitor: Competitor

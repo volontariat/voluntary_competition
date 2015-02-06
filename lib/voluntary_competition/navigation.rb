@@ -1,0 +1,29 @@
+module VoluntaryCompetition
+  module Navigation
+    def self.code
+      Proc.new do |navigation|
+        navigation.items do |primary|
+          primary.dom_class = 'nav'
+          
+          primary.item :competitors, I18n.t('competitors.index.title'), competition_competitors_path do |competitors|
+            competitors.item :new, I18n.t('general.new'), new_competition_competitor_path if user_signed_in?
+            
+            unless (@competitor.new_record? rescue true)
+              competitors.item :show, @competitor.name, competition_competitor_path(@competitor) do |competitor|
+                if can? :destroy, @competitor
+                  competitor.item :destroy, I18n.t('general.destroy'), competition_competitor_path(@competitor), method: :delete, confirm: I18n.t('general.questions.are_you_sure')
+                end
+      
+                competitor.item :show, I18n.t('general.details'), "#{competition_competitor_path(@competitor)}#top"
+                competitor.item :edit, I18n.t('general.edit'), edit_competition_competitor_path(@competitor) if can? :edit, @competitor
+              end
+            end
+          end
+          
+          instance_exec primary, ::Voluntary::Navigation::Base.menu_options(:authentication), &::Voluntary::Navigation.menu_code(:authentication)
+        end
+      end
+    end
+  end
+end
+    
