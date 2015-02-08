@@ -1,0 +1,19 @@
+en:
+  tournament_seasons:
+    index:
+      title: Tournament Seasons
+      short_title: Seasons
+      empty_collection: No seasons available.
+      
+    new: 
+      title: New Season
+    edit: 
+      title: Edit Season
+    general:
+      short_model_name: Season
+      no_more_competitors_needed: No more competitors needed.
+      competitors_needed_from_selected_competitors: Only %{needed_competitors_count} competitor(s) from %{selected_competitors_count} selected competitor(s) needed.
+              
+  activerecord:
+    models:
+      tournament_season: Tournament Season

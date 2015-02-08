@@ -1,0 +1,6 @@
+<% if @season_participation.errors.any? %>
+  $('#tournament_season_form').html('<%= escape_javascript render(partial: 'competition/season_participations/form') %>');
+<% else %>
+  $('#season_participation').html('<%= escape_javascript render(partial: 'competition/tournament_seasons/join_or_leave') %>');
+  $('#bootstrap_modal').modal('hide');
+<% end %>

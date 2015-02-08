@@ -9,7 +9,11 @@ en:
       title: New Tournament
     edit: 
       title: Edit Tournament
-      
+        
   activerecord:
     models:
       tournament: Tournament
+      
+    attributes:
+      tournament:
+        first_season_name: Name of first season

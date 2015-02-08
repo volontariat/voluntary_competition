@@ -12,6 +12,9 @@ class Competition::TournamentsController < ::Competition::ApplicationController
   end
   
   def show
+    @tournament = Tournament.find(params[:id])
+    @seasons = @tournament.seasons.order('tournament_seasons.created_at DESC')
+    @season = @seasons.find(params[:season_id] || @tournament.current_season_id)
   end
   
   def new

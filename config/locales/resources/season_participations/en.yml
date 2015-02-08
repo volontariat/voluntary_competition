@@ -1,0 +1,27 @@
+en:
+  season_particpations:
+    index:
+      title: Season Particpants
+      short_title: Participants
+      empty_collection: No season participants available.
+      
+    new: 
+      title: Join Season
+      
+    create:
+      please_select_at_least_one_competitor: Please select at least one competitor  
+      
+  activerecord:
+    models:
+      season_particpation: Season Participation
+      
+    attributes:
+      season_participation:
+        competitor_ids: Competitor(s)
+      
+    errors:
+      models:
+        season_participation:
+          attributes:
+            state:
+              tournament_competitors_limit_reached: Competitors limit of tournament reached!

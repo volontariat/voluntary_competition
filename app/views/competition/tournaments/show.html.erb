@@ -6,3 +6,19 @@
 <dl class="dl-horizontal">
   <%= show_actions namespace: :competition %>
 </dl>
+
+<%= form_tag competition_tournament_path(@tournament), method: :get, class: 'simple_form form-horizontal' do %>
+  <div class="control-group string required year">
+    <label for="season_id" class="string required control-label"><%= t('tournament_seasons.general.short_model_name') %></label>
+    <div class="controls">
+      <%= select_tag 'season_id', options_for_select(@seasons.map{|s| [s.name || s.id, s.id]}, @season.id) %> 
+      <% if user_signed_in? %>
+        <div id="season_participation" style="display:inline;"><%= render partial: 'competition/tournament_seasons/join_or_leave' %></div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% content_for :javascript_includes do %>
+  <%= javascript_include_tag 'voluntary_competition/tournaments/show' %>
+<% end %>

@@ -1,0 +1,20 @@
+<% content_for :modal_body do %>
+  <%= render partial: 'shared/layouts/twitter_bootstrap/control_group', locals: { 
+    required: true, label: t('activerecord.attributes.season_participation.competitor_ids'),
+    field: select_tag(
+      'season_participation[competitor_ids]', options_for_select(
+        current_user.competitors.order('name').map{|c| [c.name, c.id]}, params[:season_participation][:competitor_ids]
+      ), 
+      multiple: true
+    )
+  } %>
+<% end %>
+<% content_for :modal_body_form_errors do %>
+  <%= render partial: 'shared/form/error_messages', locals: { resource: @season_participation } %>
+<% end %>
+<% content_for :modal_footer do %>
+  <%= submit_tag t('general.submit') %>
+<% end %>
+<%= form_tag competition_season_participations_path(@season), method: :post, remote: true, class: 'simple_form form-horizontal' do %>
+  <%= render partial: 'shared/layouts/twitter_bootstrap/modal', locals: { title: t('season_particpations.new.title') } %>
+<% end %>

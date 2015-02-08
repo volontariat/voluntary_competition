@@ -4,6 +4,11 @@ Rails.application.routes.draw do
   
   namespace :competition do
     resources :tournaments
+    
+    resources :seasons do
+      resources :participations, controller: 'season_participations', only: [:new, :create] 
+    end
+    
     resources :competitors
   end
 end
