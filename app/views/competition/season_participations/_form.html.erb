@@ -1,4 +1,6 @@
 <% content_for :modal_body do %>
+  <%= render partial: 'shared/form/error_messages', locals: { resource: @season_participation } %>
+
   <%= render partial: 'shared/layouts/twitter_bootstrap/control_group', locals: { 
     required: true, label: t('activerecord.attributes.season_participation.competitor_ids'),
     field: select_tag(
@@ -8,9 +10,6 @@
       multiple: true
     )
   } %>
-<% end %>
-<% content_for :modal_body_form_errors do %>
-  <%= render partial: 'shared/form/error_messages', locals: { resource: @season_participation } %>
 <% end %>
 <% content_for :modal_footer do %>
   <%= submit_tag t('general.submit') %>
