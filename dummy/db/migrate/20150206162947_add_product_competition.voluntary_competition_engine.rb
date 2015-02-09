@@ -5,6 +5,13 @@ class AddProductCompetition < ActiveRecord::Migration
     else
       Product.create(name: 'Competition', text: 'Dummy') 
     end
+    
+    create_table :games do |t|
+      t.string :name
+      t.timestamps
+    end
+    
+    add_index :games, :name, unique: true
 
     create_table :exercise_types do |t|
       t.string :name

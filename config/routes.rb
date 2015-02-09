@@ -3,6 +3,7 @@ Rails.application.routes.draw do
   get '/competition' => 'product/competition#index'
   
   namespace :competition do
+    resources :games
     resources :exercise_types
     resources :tournaments
     

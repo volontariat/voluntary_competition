@@ -1,0 +1,15 @@
+en:
+  games:
+    index:
+      title: Games
+      name: Name
+      empty_collection: No games available.
+      
+    new: 
+      title: New Game
+    edit: 
+      title: Edit Game
+        
+  activerecord:
+    models:
+      game: Game
