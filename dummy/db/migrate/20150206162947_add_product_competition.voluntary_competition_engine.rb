@@ -6,6 +6,13 @@ class AddProductCompetition < ActiveRecord::Migration
       Product.create(name: 'Competition', text: 'Dummy') 
     end
 
+    create_table :exercise_types do |t|
+      t.string :name
+      t.timestamps
+    end
+    
+    add_index :exercise_types, :name, unique: true
+    
     create_table :competitors do |t|
       t.string :name
       t.integer :user_id
@@ -49,6 +56,7 @@ class AddProductCompetition < ActiveRecord::Migration
   def down
     Product.where(name: 'Competition').first.destroy
     
+    drop_table :exercise_types
     drop_table :competitors
     drop_table :tournaments
     drop_table :tournament_seasons

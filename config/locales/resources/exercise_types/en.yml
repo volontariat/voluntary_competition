@@ -1,0 +1,15 @@
+en:
+  exercise_types:
+    index:
+      title: Exercise Types
+      name: Name
+      empty_collection: No exercise types available.
+      
+    new: 
+      title: New Exercise Type
+    edit: 
+      title: Edit Exercise Type
+        
+  activerecord:
+    models:
+      exercise_type: Exercise Type
