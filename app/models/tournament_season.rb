@@ -15,7 +15,8 @@ class TournamentSeason < ActiveRecord::Base
     already_joined_competitors_count = options[:already_joined_competitors_count]
     competitors_limit ||= tournament.competitors_limit
     
-    needed_competitors_count = competitors_limit
+    accepted_participations_count = participations.accepted.count
+    needed_competitors_count = competitors_limit - accepted_participations_count
     
     if needed_competitors_count > 0
       false

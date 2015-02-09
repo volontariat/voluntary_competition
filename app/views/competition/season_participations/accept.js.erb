@@ -1,0 +1,7 @@
+<% if @season_participation.accepted? %>
+  $('#season_participation_<%= @season_participation.id %>_state').html("<%= t("season_participations.general.states.#{@season_participation.state}") %>");
+<% else %>
+  alert("<%= I18n.t('season_participations.accept.failed', errors: @season_participation.errors.full_messages.join('. '))%>");
+<% end %>
+
+$('#season_participation_<%= @season_participation.id %>_actions').html('<%= escape_javascript render(partial: 'competition/season_participations/actions', locals: { season_participation: @season_participation }) %>');

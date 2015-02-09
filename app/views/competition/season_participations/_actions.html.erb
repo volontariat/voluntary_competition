@@ -1,0 +1,10 @@
+<% if season_participation.can_accept? %>
+  <%= link_to accept_competition_season_participation_path(season_participation.id), method: :put, remote: true, class: 'btn btn-danger change_state_of_season_participation_link' do %>
+    <%= t('season_participations.general.events.accept') %> <%= image_tag 'voluntary/spinner.gif', class: 'ajax_spinner hide' %>
+  <% end %>
+<% end %>
+<% if season_participation.can_deny? %>
+  <%= link_to deny_competition_season_participation_path(season_participation.id), method: :put, remote: true, class: 'btn btn-danger change_state_of_season_participation_link' do %>
+    <%= t('season_participations.general.events.deny') %> <%= image_tag 'voluntary/spinner.gif', class: 'ajax_spinner hide' %>
+  <% end %>
+<% end %>

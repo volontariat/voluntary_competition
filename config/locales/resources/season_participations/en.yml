@@ -1,5 +1,5 @@
 en:
-  season_particpations:
+  season_participations:
     index:
       title: Season Particpants
       short_title: Participants
@@ -10,7 +10,19 @@ en:
       
     create:
       please_select_at_least_one_competitor: Please select at least one competitor  
-      
+   
+    accept:
+      failed: "Acceptation of the particpation failed: %{errors}"
+
+    deny:
+      failed: "Denying of the particpation failed: %{errors}"
+            
+    general:
+      states:
+        requested: Requested
+        accepted: Accepted
+        denied: Denied
+        
   activerecord:
     models:
       season_particpation: Season Participation

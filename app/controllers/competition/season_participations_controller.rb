@@ -2,10 +2,18 @@ class Competition::SeasonParticipationsController < ::Competition::ApplicationCo
   include ::Competition::BaseController
   include Applicat::Mvc::Controller::Resource
   
+  load_and_authorize_resource
+  
   def new
     build_resource
 
     render layout: false if request.xhr?
+  end
+  
+  def index
+    @season = TournamentSeason.find(params[:season_id])
+    @season_participations = @season.participations.order_by_state.paginate(per_page: 25, page: params[:page] || 1)
+    render partial: 'competition/season_participations/collection', layout: false if request.xhr?
   end
   
   def create
@@ -30,11 +38,23 @@ class Competition::SeasonParticipationsController < ::Competition::ApplicationCo
       @season_participation.errors[:base] += errors if errors.any?
     end
     
+    unless @season_participation.errors.any?
+      @season_participations = @season.participations.order_by_state.paginate(per_page: 25, page: params[:page] || 1)
+    end
+    
     render layout: false if request.xhr?
   end
   
-  def leave
-    render layout: false if request.xhr?
+  def accept
+    @season_participation.accept
+    
+    render layout: false
+  end
+  
+  def deny
+    @season_participation.deny
+    
+    render layout: false
   end
   
   private

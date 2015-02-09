@@ -15,5 +15,5 @@
   <%= submit_tag t('general.submit') %>
 <% end %>
 <%= form_tag competition_season_participations_path(@season), method: :post, remote: true, class: 'simple_form form-horizontal' do %>
-  <%= render partial: 'shared/layouts/twitter_bootstrap/modal', locals: { title: t('season_particpations.new.title') } %>
+  <%= render partial: 'shared/layouts/twitter_bootstrap/modal', locals: { title: t('season_participations.new.title') } %>
 <% end %>

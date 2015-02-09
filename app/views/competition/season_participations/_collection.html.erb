@@ -1,0 +1,25 @@
+<% if @season_participations.none? %>
+<p><%= I18n.t('season_participations.index.empty_collection')%></p>
+<% else %>
+  <table class="table table-striped">
+    <thead>
+      <tr class="<%= cycle('odd', 'even') %>">
+        <th><%= t('activerecord.models.competitor') %></th>  
+        <th><%= t('attributes.state') %></th>
+      </tr>
+    </thead>
+    <tbody>
+    <% @season_participations.each do |season_participation| %>
+      <tr class="<%= cycle('odd', 'even') %>">
+        <td><%= link_to season_participation.competitor.name, competition_competitor_path(season_participation.competitor) %></td>
+        <td id="season_participation_<%= season_participation.id %>_state"><%= t("season_participations.general.states.#{season_participation.state}") %></td>
+        <td id="season_participation_<%= season_participation.id %>_actions">
+          <%= render partial: 'competition/season_participations/actions', locals: { season_participation: season_participation } %>
+        </td>
+      </tr>
+    <% end %>
+    </tbody>
+  </table>
+<% end %>
+
+<%= will_paginate @season_participations %>

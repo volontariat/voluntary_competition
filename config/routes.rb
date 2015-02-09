@@ -6,7 +6,14 @@ Rails.application.routes.draw do
     resources :tournaments
     
     resources :seasons do
-      resources :participations, controller: 'season_participations', only: [:new, :create] 
+      resources :participations, controller: 'season_participations', only: [:index, :new, :create] 
+    end
+    
+    resources :season_participations, only: [] do
+      member do
+        put :accept
+        put :deny
+      end
     end
     
     resources :competitors

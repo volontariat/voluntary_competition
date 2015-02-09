@@ -19,6 +19,31 @@
   </div>
 <% end %>
 
+<div class="tabs">
+  <ul>
+    <li>
+      <a href="#rankings"><%= t('tournament_rankings.index.short_title') %></a>
+    </li>
+    <li>
+      <a href="#matches"><%= t('tournament_matches.index.short_title') %></a>
+    </li>
+<% if can? :update, @season %>
+    <li>
+      <a href="<%= competition_season_participations_path(@season.id) %>">
+        <%= t('season_participations.index.short_title') %> 
+        <%= image_tag 'voluntary/spinner.gif', class: 'ajax_spinner hide' %>
+      </a>
+    </li>
+<% end %>
+  </ul>
+  <div id="rankings">
+    Dummy
+  </div>
+  <div id="matches">
+    Dummy
+  </div>
+</div>
+
 <% content_for :javascript_includes do %>
   <%= javascript_include_tag 'voluntary_competition/tournaments/show' %>
 <% end %>
