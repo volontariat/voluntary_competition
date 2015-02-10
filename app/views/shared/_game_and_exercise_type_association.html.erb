@@ -1,0 +1,6 @@
+<% if f.object.new_record? %>
+  <%= f.input :exercise_type_id, as: :hidden %>
+  <%= f.input :exercise_type_name, as: :string, required: true, input_html: { autocomplete: 'on', data: { source: autocomplete_competition_exercise_types_path } } %>
+  <%= f.input :game_id, as: :hidden %>
+  <%= f.input :game_name, as: :string, required: true, input_html: { autocomplete: 'on', data: { source: autocomplete_competition_games_path } } %>
+<% end %>

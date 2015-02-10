@@ -1,3 +1,7 @@
 <h3><%= t('competitors.new.title') %></h3>
 
 <%= render 'form' %>
+
+<% content_for :javascript_includes do %>
+  <%= javascript_include_tag 'voluntary_competition/competitors/new' %>
+<% end %>

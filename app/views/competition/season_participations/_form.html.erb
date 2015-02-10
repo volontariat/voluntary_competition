@@ -5,7 +5,7 @@
     required: true, label: t('activerecord.attributes.season_participation.competitor_ids'),
     field: select_tag(
       'season_participation[competitor_ids]', options_for_select(
-        current_user.competitors.order('name').map{|c| [c.name, c.id]}, params[:season_participation][:competitor_ids]
+        @competitors.map{|c| [c.name, c.id]}, params[:season_participation][:competitor_ids]
       ), 
       multiple: true
     )

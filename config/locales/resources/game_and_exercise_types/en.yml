@@ -1,0 +1,5 @@
+en:
+       
+  activerecord:
+    models:
+      game_and_exercise_type: Game and Exercise Type

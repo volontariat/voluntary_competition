@@ -10,11 +10,14 @@ db_seed.create_fixtures
 =end
 
 user = User.where(name: 'User').first
-tournament = user.tournaments.create!(name: 'Fußball-Bundesliga der Männer', first_season_name: '2014/2015', competitors_limit: 3)
+tournament = user.tournaments.create!(
+  name: '1. Fußball-Bundesliga', first_season_name: '2014/2015', competitors_limit: 3,
+  exercise_type_name: "Men's", game_name: 'Soccer'
+)
 tournament.seasons.create!(name: '2015/2016')
 
 4.times do |i|
-  user.competitors.create!(name: "Player #{(i + 1)}")
+  user.competitors.create!(name: "Player #{(i + 1)}", exercise_type_name: "Men's", game_name: 'Soccer')
 end
 
 puts "Done."

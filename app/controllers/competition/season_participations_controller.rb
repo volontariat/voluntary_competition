@@ -6,7 +6,8 @@ class Competition::SeasonParticipationsController < ::Competition::ApplicationCo
   
   def new
     build_resource
-
+    find_competitors
+    
     render layout: false if request.xhr?
   end
   
@@ -38,7 +39,9 @@ class Competition::SeasonParticipationsController < ::Competition::ApplicationCo
       @season_participation.errors[:base] += errors if errors.any?
     end
     
-    unless @season_participation.errors.any?
+    if @season_participation.errors.any?
+      find_competitors
+    else
       @season_participations = @season.participations.order_by_state.paginate(per_page: 25, page: params[:page] || 1)
     end
     
@@ -62,12 +65,18 @@ class Competition::SeasonParticipationsController < ::Competition::ApplicationCo
   def build_resource
     params[:season_participation] ||= {}
     @season = TournamentSeason.find(params[:season_id])
-    @already_joined_competitor_ids = @season.participations.where(competitor_id: current_user.competitors.map(&:id)).map(&:competitor_id)
+    @already_joined_competitor_ids = @season.participations.where(
+      competitor_id: current_user.competitors.where(game_and_exercise_type_id: @season.tournament.game_and_exercise_type_id).map(&:id)
+    ).map(&:competitor_id)
     params[:season_participation][:competitor_ids] ||= @already_joined_competitor_ids if action_name == 'new'
     params[:season_participation][:competitor_ids] ||= []
     params[:season_participation][:competitor_ids] = params[:season_participation][:competitor_ids].map(&:to_i)
     @left_competitor_ids = @already_joined_competitor_ids.select{|id| !params[:season_participation][:competitor_ids].include?(id) }
     @new_competitor_ids = params[:season_participation][:competitor_ids].select{|id| !@already_joined_competitor_ids.include?(id) }
     @season_participation = SeasonParticipation.new
+  end
+  
+  def find_competitors
+    @competitors = current_user.competitors.where(game_and_exercise_type_id: @season.tournament.game_and_exercise_type_id).order('name')    
   end
 end

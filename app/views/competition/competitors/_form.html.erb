@@ -2,6 +2,7 @@
   <%= render partial: 'shared/form/error_messages', locals: { resource: @competitor } %>
   
   <div class="form-inputs">
+    <%= render partial: 'shared/game_and_exercise_type_association', locals: { f: f } %>
     <%= f.input :name %>
   </div>
   

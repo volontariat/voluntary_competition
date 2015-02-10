@@ -4,6 +4,8 @@
 </h3>
 
 <dl class="dl-horizontal">
+  <%= show_attribute :exercise_type_id, value: link_to(@tournament.game_and_exercise_type.exercise_type.name, competition_exercise_type_path(@tournament.game_and_exercise_type.exercise_type.id)) %>
+  <%= show_attribute :game_id, value: link_to(@tournament.game_and_exercise_type.game.name, competition_game_path(@tournament.game_and_exercise_type.game.id)) %>
   <%= show_actions namespace: :competition %>
 </dl>
 
