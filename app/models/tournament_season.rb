@@ -3,7 +3,7 @@ class TournamentSeason < ActiveRecord::Base
   
   belongs_to :tournament
   
-  has_many :participations, class_name: 'SeasonParticipation', foreign_key: 'season_id', dependent: :destroy
+  has_many :participations, class_name: 'TournamentSeasonParticipation', foreign_key: 'season_id', dependent: :destroy
   
   validates :tournament_id, presence: true
   

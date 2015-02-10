@@ -4,7 +4,7 @@ class Competitor < ActiveRecord::Base
   
   belongs_to :user
   
-  has_many :season_participations, dependent: :destroy
+  has_many :season_participations, class_name: 'TournamentSeasonParticipation', dependent: :destroy
   
   validates :user_id, presence: true
   validates :name, presence: true, uniqueness: { case_sensitive: false, scope: [:user_id, :game_and_exercise_type_id] }

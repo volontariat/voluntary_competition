@@ -25,15 +25,15 @@ en:
         
   activerecord:
     models:
-      season_particpation: Season Participation
+      tournament_season_particpation: Season Participation
       
     attributes:
-      season_participation:
+      tournament_season_participation:
         competitor_ids: Competitor(s)
       
     errors:
       models:
-        season_participation:
+        tournament_season_participation:
           attributes:
             state:
               tournament_competitors_limit_reached: Competitors limit of tournament reached!

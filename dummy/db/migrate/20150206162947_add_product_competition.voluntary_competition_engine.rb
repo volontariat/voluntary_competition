@@ -39,10 +39,10 @@ class AddProductCompetition < ActiveRecord::Migration
     add_index :competitors, [:user_id, :game_and_exercise_type_id, :name], unique: true, name: 'unique_competitor_index'
 
     create_table :tournaments do |t|
+      t.integer :game_and_exercise_type_id
       t.string :name
       t.integer :competitors_limit, limit: 3
       t.integer :current_season_id
-      t.integer :game_and_exercise_type_id
       t.integer :user_id
       t.timestamps
     end
@@ -58,15 +58,15 @@ class AddProductCompetition < ActiveRecord::Migration
     
     add_index :tournament_seasons, [:tournament_id, :state]
 
-    create_table :season_participations do |t|
+    create_table :tournament_season_participations do |t|
       t.integer :season_id
       t.integer :competitor_id
       t.integer :user_id
       t.string :state
       t.timestamps
     end
-    
-    add_index :season_participations, [:season_id, :competitor_id], unique: true
+
+    add_index :tournament_season_participations, [:season_id, :competitor_id], unique: true, name: 'uniq_tournament_season_participation'
   end
   
   def down
@@ -78,6 +78,6 @@ class AddProductCompetition < ActiveRecord::Migration
     drop_table :competitors
     drop_table :tournaments
     drop_table :tournament_seasons
-    drop_table :season_participations
+    drop_table :tournament_season_participations
   end
 end

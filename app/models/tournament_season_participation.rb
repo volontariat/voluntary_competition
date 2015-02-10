@@ -1,4 +1,4 @@
-class SeasonParticipation < ActiveRecord::Base
+class TournamentSeasonParticipation < ActiveRecord::Base
   include Applicat::Mvc::Model::Resource::Base
   
   STATES = [:accepted, :requested, :denied]
@@ -57,7 +57,7 @@ class SeasonParticipation < ActiveRecord::Base
   
   def competitors_limit_of_tournament_not_reached 
     unless season.tournament.more_competitors_needed?(season)
-      errors[:base] << I18n.t('activerecord.errors.models.season_participation.attributes.state.tournament_competitors_limit_reached')
+      errors[:base] << I18n.t('activerecord.errors.models.tournament_season_participation.attributes.state.tournament_competitors_limit_reached')
     end
   end
 end

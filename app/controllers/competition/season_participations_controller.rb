@@ -2,7 +2,7 @@ class Competition::SeasonParticipationsController < ::Competition::ApplicationCo
   include ::Competition::BaseController
   include Applicat::Mvc::Controller::Resource
   
-  load_and_authorize_resource
+  load_and_authorize_resource class: 'TournamentSeasonParticipation'
   
   def new
     build_resource
@@ -73,7 +73,7 @@ class Competition::SeasonParticipationsController < ::Competition::ApplicationCo
     params[:season_participation][:competitor_ids] = params[:season_participation][:competitor_ids].map(&:to_i)
     @left_competitor_ids = @already_joined_competitor_ids.select{|id| !params[:season_participation][:competitor_ids].include?(id) }
     @new_competitor_ids = params[:season_participation][:competitor_ids].select{|id| !@already_joined_competitor_ids.include?(id) }
-    @season_participation = SeasonParticipation.new
+    @season_participation = TournamentSeasonParticipation.new
   end
   
   def find_competitors
