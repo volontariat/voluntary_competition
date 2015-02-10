@@ -1,0 +1,18 @@
+en:
+  tournament_matches:
+    index:
+      title: Matches
+      empty_collection: No matches available.
+        
+    general:
+      home: Home
+      away: Away
+      result: Result
+      
+  activerecord:
+    models:
+      tournament_match: Tournament Match
+      
+    attributes:
+      tournament_match:
+        matchday: Matchday

@@ -9,17 +9,30 @@
   <%= show_actions namespace: :competition %>
 </dl>
 
-<%= form_tag competition_tournament_path(@tournament), method: :get, class: 'simple_form form-horizontal' do %>
-  <div class="control-group string required year">
-    <label for="season_id" class="string required control-label"><%= t('tournament_seasons.general.short_model_name') %></label>
-    <div class="controls">
-      <%= select_tag 'season_id', options_for_select(@seasons.map{|s| [s.name || s.id, s.id]}, @season.id) %> 
-      <% if user_signed_in? %>
-        <div id="season_participation" style="display:inline;"><%= render partial: 'competition/tournament_seasons/join_or_leave' %></div>
+<table>
+  <tr>
+    <td style="width:270px">
+      <%= form_tag competition_tournament_path(@tournament), method: :get, class: 'simple_form form-horizontal' do %>
+        <label for="season_id" class="string required" style="display:inline"><%= t('tournament_seasons.general.short_model_name') %></label>&nbsp;&nbsp;
+        <%= hidden_field_tag 'matchday', @matchday %>
+        <%= select_tag 'season_id', options_for_select(@seasons.map{|s| [s.name || s.id, s.id]}, @season.id), style: 'width:110px' %> 
+        <% if user_signed_in? %>
+          &nbsp;&nbsp;
+          <div id="season_participation" style="display:inline;"><%= render partial: 'competition/tournament_seasons/join_or_leave' %></div>
+        <% end %>
       <% end %>
-    </div>
-  </div>
+    </td>
+<% if @season.matches.present? %>
+    <td>
+      <%= form_tag competition_tournament_path(@tournament), method: :get, class: 'simple_form form-horizontal' do %>
+        <label for="matchday" class="string required" style="display:inline"><%= t('activerecord.attributes.tournament_match.matchday') %></label>&nbsp;&nbsp;
+        <%= hidden_field_tag 'season_id', @season.id %>
+        <%= select_tag 'matchday', options_for_select((1..@season.matchdays).to_a, @matchday), style: 'width:50px' %> 
+      <% end %>
+    </td>
 <% end %>
+  </tr>
+</table>
 
 <div class="tabs">
   <ul>
@@ -27,7 +40,10 @@
       <a href="#rankings"><%= t('tournament_rankings.index.short_title') %></a>
     </li>
     <li>
-      <a href="#matches"><%= t('tournament_matches.index.short_title') %></a>
+      <a href="<%= competition_season_matches_path(@season.id, matchday: @matchday) %>">
+        <%= t('tournament_matches.index.title') %>
+        <%= image_tag 'voluntary/spinner.gif', class: 'ajax_spinner hide' %>
+      </a>
     </li>
 <% if can? :update, @season %>
     <li>
@@ -41,11 +57,11 @@
   <div id="rankings">
     Dummy
   </div>
-  <div id="matches">
-    Dummy
-  </div>
 </div>
 
+<% javascript_tag do %>
+  matchday = <%= @matchday %>
+<% end %>
 <% content_for :javascript_includes do %>
   <%= javascript_include_tag 'voluntary_competition/tournaments/show' %>
 <% end %>

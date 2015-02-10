@@ -19,6 +19,7 @@ Rails.application.routes.draw do
     
     resources :seasons do
       resources :participations, controller: 'season_participations', only: [:index, :new, :create] 
+      resources :matches, only: [:index]
     end
     
     resources :season_participations, only: [] do
@@ -29,5 +30,6 @@ Rails.application.routes.draw do
     end
     
     resources :competitors
+    resources :matches, only: [:show]
   end
 end

@@ -47,6 +47,12 @@ class TournamentSeasonParticipation < ActiveRecord::Base
     event :deny do
       transition [:requested, :accepted] => :denied
     end
+    
+    after_transition [:requested, :denied] => :accepted do |season_participation, transition|
+      unless season_participation.season.tournament.more_competitors_needed?(season_participation.season)
+        season_participation.season.generate_matches
+      end
+    end
   end
   
   private 
