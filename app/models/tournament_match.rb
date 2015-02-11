@@ -15,9 +15,32 @@ class TournamentMatch < ActiveRecord::Base
 
   before_validation :set_winner_and_loser_or_draw
   
+  def points_for_competitor(competitor_id)
+    if draw
+      1
+    elsif winner_competitor_id == competitor_id
+      3
+    else
+      0
+    end
+  end
+  
+  def goals_for_competitor(competitor_id)
+    if home_competitor_id == competitor_id
+      [home_goals, away_goals]
+    else
+      [away_goals, home_goals]
+    end
+  end
+  
   private
   
   def set_winner_and_loser_or_draw
+    return true if home_goals.nil? || home_goals == '' || away_goals.nil? || away_goals == '' 
+    
+    self.home_goals = home_goals.to_i
+    self.away_goals = away_goals.to_i
+    
     if home_goals == away_goals
       self.winner_competitor_id = nil
       self.loser_competitor_id = nil
@@ -25,12 +48,14 @@ class TournamentMatch < ActiveRecord::Base
     elsif home_goals > away_goals
       self.winner_competitor_id = home_competitor_id
       self.loser_competitor_id = away_competitor_id
-      self.draw = true
+      self.draw = false
     elsif away_goals > home_goals 
       self.winner_competitor_id = away_competitor_id
       self.loser_competitor_id = home_competitor_id
-      self.draw = true
+      self.draw = false
     end
+    
+    return true
   end
   
   def result_not_changed
