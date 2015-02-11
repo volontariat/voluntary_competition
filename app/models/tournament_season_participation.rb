@@ -49,9 +49,7 @@ class TournamentSeasonParticipation < ActiveRecord::Base
     end
     
     after_transition [:requested, :denied] => :accepted do |season_participation, transition|
-      unless season_participation.season.tournament.more_competitors_needed?(season_participation.season)
-        season_participation.season.generate_matches
-      end
+      season_participation.season.activate! unless season_participation.season.tournament.more_competitors_needed?(season_participation.season)
     end
   end
   
