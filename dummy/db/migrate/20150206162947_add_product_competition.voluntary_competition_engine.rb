@@ -85,7 +85,7 @@ class AddProductCompetition < ActiveRecord::Migration
       t.string :state
     end
     
-    add_index :tournament_matches, :season_id
+    add_index :tournament_matches, [:season_id, :matchday]
   end
   
   def down
