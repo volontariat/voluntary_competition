@@ -39,7 +39,7 @@
             </td>
           </tr>
         <% unless match.errors.empty? %>
-          <tr>
+          <tr class="form_errors">
             <td colspan="4">
               <%= render partial: 'shared/form/error_messages', locals: { resource: match } %>
             </td>

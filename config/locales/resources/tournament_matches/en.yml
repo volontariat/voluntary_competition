@@ -16,3 +16,10 @@ en:
     attributes:
       tournament_match:
         matchday: Matchday
+        
+    errors:
+      models:
+        tournament_match:
+          attributes:
+            base:
+              result_cannot_be_changed: Result cannot be changed after once set.

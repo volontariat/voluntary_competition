@@ -9,8 +9,9 @@ class TournamentMatch < ActiveRecord::Base
   validates :home_competitor_id, presence: true
   validates :away_competitor_id, presence: true
   validates :date, presence: true
+  validate :result_not_changed
   
-  attr_accessible :season_id, :matchday, :home_competitor_id, :away_competitor_id, :home_goals, :away_goals, :winner_competitor_id, :loser_competitor_id, :draw, :date
+  attr_accessible :season_id, :matchday, :home_competitor_id, :away_competitor_id, :home_goals, :away_goals, :date
 
   before_validation :set_winner_and_loser_or_draw
   
@@ -29,6 +30,12 @@ class TournamentMatch < ActiveRecord::Base
       self.winner_competitor_id = away_competitor_id
       self.loser_competitor_id = home_competitor_id
       self.draw = true
+    end
+  end
+  
+  def result_not_changed
+    if (home_goals_was.present? && away_goals_was.present?) && (home_goals_changed? || away_goals_changed?)
+      errors[:base] << I18n.t('activerecord.errors.models.tournament_match.attributes.base.result_cannot_be_changed')
     end
   end
 end
