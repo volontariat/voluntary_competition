@@ -7,6 +7,13 @@ class Competition::MatchesController < ::Competition::ApplicationController
   def index
     @season = TournamentSeason.find(params[:season_id])
     @matches = @season.matches.where('matchday = ?', params[:matchday])
-    render partial: 'competition/tournament_matches/collection', layout: false if request.xhr?
+    render partial: 'competition/matches/collection', layout: false if request.xhr?
+  end
+  
+  def updates
+    @season = TournamentSeason.find(params[:season_id])
+    @matches = TournamentMatch.update(params[:matches].keys, params[:matches].values)
+    
+    render layout: false if request.xhr?
   end
 end

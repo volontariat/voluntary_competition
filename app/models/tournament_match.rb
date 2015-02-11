@@ -10,5 +10,25 @@ class TournamentMatch < ActiveRecord::Base
   validates :away_competitor_id, presence: true
   validates :date, presence: true
   
-  attr_accessible :season_id, :matchday, :home_competitor_id, :away_competitor_id, :winner_competitor_id, :loser_competitor_id, :draw, :date
+  attr_accessible :season_id, :matchday, :home_competitor_id, :away_competitor_id, :home_goals, :away_goals, :winner_competitor_id, :loser_competitor_id, :draw, :date
+
+  before_validation :set_winner_and_loser_or_draw
+  
+  private
+  
+  def set_winner_and_loser_or_draw
+    if home_goals == away_goals
+      self.winner_competitor_id = nil
+      self.loser_competitor_id = nil
+      self.draw = true
+    elsif home_goals > away_goals
+      self.winner_competitor_id = home_competitor_id
+      self.loser_competitor_id = away_competitor_id
+      self.draw = true
+    elsif away_goals > home_goals 
+      self.winner_competitor_id = away_competitor_id
+      self.loser_competitor_id = home_competitor_id
+      self.draw = true
+    end
+  end
 end

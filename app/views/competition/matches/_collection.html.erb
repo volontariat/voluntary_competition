@@ -1,0 +1,56 @@
+<% if @matches.none? %>
+<p><%= I18n.t('matchs.index.empty_collection')%></p>
+<% else %>
+  <%= form_tag updates_competition_season_matches_path(@season.id), method: :put, remote: true, id: 'matches_form' do %>
+    <table class="table table-striped" style="width:700px">
+      <thead>
+        <tr class="<%= cycle('odd', 'even') %>">
+          <th style="width:200px"><%= t('attributes.date') %></th>  
+          <th style="width:200px"><%= t('tournament_matches.general.home') %></th>
+          <th style="width:200px"><%= t('tournament_matches.general.away') %></th>
+          <th style="width:100px"><%= t('tournament_matches.general.result') %></th>
+        </tr>
+      </thead>
+      <tbody>
+    <% @matches.each do |match| %>
+      <%= fields_for 'matches[]', match do |f| %>
+          <tr class="<%= cycle('odd', 'even') %>">
+            <td>
+        <% if can? :update, @season %>
+              <div class="datetime_picker" class="input-append date">
+                <%= f.text_field :date, 'data-format' => 'yyyy-MM-dd hh:mm:ss', style: 'width:160px' %>
+                <span class="add-on">
+                  <i data-time-icon="icon-time" data-date-icon="icon-calendar">
+                  </i>
+                </span>
+              </div>
+        <% else %>
+              <%= match.date.strftime('%d.%m.%Y %H:%M:%S') %>
+        <% end %>
+            </td>
+            <td><%= link_to match.home_competitor.name, competition_competitor_path(match.home_competitor_id) %>
+            <td><%= link_to match.away_competitor.name, competition_competitor_path(match.away_competitor_id) %>
+            <td>
+        <% if can? :update, @season %>
+              <%= f.text_field :home_goals, style: 'width:25px' %>&nbsp;&nbsp;-&nbsp;&nbsp;<%= f.text_field :away_goals, style: 'width:25px' %>
+        <% else %>
+              <%= match.home_goals.blank? ? '-' : "#{match.home_goals}:#{match.away_goals}" %>
+        <% end %>
+            </td>
+          </tr>
+        <% unless match.errors.empty? %>
+          <tr>
+            <td colspan="4">
+              <%= render partial: 'shared/form/error_messages', locals: { resource: match } %>
+            </td>
+          </tr>
+        <% end %>  
+      <% end %>
+    <% end %>
+      </tbody>
+    </table>
+    <% if can? :update, @season %>
+    <p><%= submit_tag t('general.submit') %> <%= image_tag 'voluntary/spinner.gif', class: 'hide', id: 'matches_spinner' %></p>
+    <% end %>
+  <% end %>
+<% end %>

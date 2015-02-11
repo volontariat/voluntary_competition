@@ -1,0 +1,7 @@
+<% if @matches.select{ |m| !m.errors.empty? }.any? %>
+  $('#ui-tabs-1').html('<%= escape_javascript render(partial: 'competition/matches/collection') %>');
+<% else %>
+  alert("<%= I18n.t('general.form.successfully_updated') %>");
+<% end %>
+
+$('#matches_spinner').hide()
