@@ -16,6 +16,8 @@ class Competition::TournamentsController < ::Competition::ApplicationController
     @seasons = @tournament.seasons.order('tournament_seasons.created_at DESC')
     @season = @seasons.find(params[:season_id] || @tournament.current_season_id)
     @matchday = params[:matchday] || @tournament.current_season.current_matchday
+    @matchday = @matchday.to_i
+    @ranking_matchday = @matchday > @tournament.current_season.current_matchday ? @tournament.current_season.current_matchday : @matchday
   end
   
   def new

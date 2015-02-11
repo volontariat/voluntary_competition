@@ -2,6 +2,7 @@
 <p><%= I18n.t('matchs.index.empty_collection')%></p>
 <% else %>
   <%= form_tag updates_competition_season_matches_path(@season.id), method: :put, remote: true, id: 'matches_form' do %>
+    <%= hidden_field_tag 'matchday', params[:matchday] %>
     <table class="table table-striped" style="width:700px">
       <thead>
         <tr class="<%= cycle('odd', 'even') %>">

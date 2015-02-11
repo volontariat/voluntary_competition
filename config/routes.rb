@@ -19,6 +19,8 @@ Rails.application.routes.draw do
     
     resources :seasons do
       resources :participations, controller: 'season_participations', only: [:index, :new, :create] 
+      resources :rankings, only: [:index]
+      
       resources :matches, only: [:index] do
         collection do
           put :updates

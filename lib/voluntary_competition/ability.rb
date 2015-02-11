@@ -3,7 +3,8 @@ module VoluntaryCompetition
     def self.after_initialize
       Proc.new do |ability, user, options|
         ability.can :read, [
-          Game, ExerciseType, GameAndExerciseType, Competitor, Tournament, TournamentSeason, TournamentSeasonParticipation, TournamentMatch
+          Game, ExerciseType, GameAndExerciseType, Competitor, Tournament, TournamentSeason, TournamentSeasonParticipation, 
+          TournamentSeasonRanking, TournamentMatch
         ]
         
         if user.present?

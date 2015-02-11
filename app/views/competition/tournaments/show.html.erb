@@ -22,7 +22,7 @@
         <% end %>
       <% end %>
     </td>
-<% if @season.matches.present? %>
+<% if @season.matchdays > 0 %>
     <td>
       <%= form_tag competition_tournament_path(@tournament), method: :get, class: 'simple_form form-horizontal' do %>
         <label for="matchday" class="string required" style="display:inline"><%= t('activerecord.attributes.tournament_match.matchday') %></label>&nbsp;&nbsp;
@@ -37,7 +37,9 @@
 <div class="tabs tournament_show_tabs">
   <ul>
     <li>
-      <a href="#rankings"><%= t('tournament_rankings.index.short_title') %></a>
+      <a href="<%= competition_season_rankings_path(@season.id, matchday: @ranking_matchday) %>">
+        <%= t('tournament_season_rankings.index.title') %>
+      </a>
     </li>
     <li>
       <a href="<%= competition_season_matches_path(@season.id, matchday: @matchday) %>">
@@ -54,9 +56,6 @@
     </li>
 <% end %>
   </ul>
-  <div id="rankings">
-    Dummy
-  </div>
 </div>
 
 <% javascript_tag do %>

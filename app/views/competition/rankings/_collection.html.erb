@@ -1,0 +1,38 @@
+<% if @rankings.none? %>
+<p><%= I18n.t('tournament_season_rankings.index.empty_collection')%></p>
+<% else %>
+  <table class="table table-striped" style="width:650px">
+    <thead>
+      <tr class="<%= cycle('odd', 'even') %>">
+        <th style="width:25px"><%= t('attributes.position') %></th>  
+        <th style="width:25px"><%= t('attributes.trend') %></th>
+        <th style="width:200px"><%= t('activerecord.models.competitor') %></th> 
+        <th style="width:25px"><%= t('tournament_matches.index.title') %></th>
+        <th style="width:25px"><%= t('activerecord.attributes.tournament_season_ranking.wins') %></th> 
+        <th style="width:25px"><%= t('activerecord.attributes.tournament_season_ranking.draws') %></th> 
+        <th style="width:25px"><%= t('activerecord.attributes.tournament_season_ranking.losses') %></th> 
+        <th style="width:50px"><%= t('tournament_season_rankings.general.goals') %></th> 
+        <th style="width:25px"><%= t('activerecord.attributes.tournament_season_ranking.goal_differential') %></th> 
+        <th style="width:25px"><%= t('activerecord.attributes.tournament_season_ranking.points') %></th>
+      </tr>
+    </thead>
+    <tbody>
+    <% @rankings.each do |ranking| %>
+      <tr class="<%= cycle('odd', 'even') %>">
+        <td style="text-align:right"><%= ranking.position %></td>
+        <td style="text-align:center">
+      <% if ranking.trend == 1 %><i class="icon-arrow-up"></i><% elsif ranking.trend == 2 %><i class="icon-arrow-down"></i><% end %>
+        </td>
+        <td><%= link_to ranking.competitor.name, competition_competitor_path(ranking.competitor) %></td>
+        <td style="text-align:right"><%= ranking.matches %></td>
+        <td style="text-align:right"><%= ranking.wins %></td>
+        <td style="text-align:right"><%= ranking.draws %></td>
+        <td style="text-align:right"><%= ranking.losses %></td>
+        <td style="text-align:center"><%= ranking.goals_scored %>:<%= ranking.goals_allowed %></td>
+        <td style="text-align:right"><%= ranking.goal_differential_formatted %></td>
+        <td style="text-align:right"><%= ranking.points %></td>
+      </tr>
+    <% end %>
+    </tbody>
+  </table>
+<% end %>

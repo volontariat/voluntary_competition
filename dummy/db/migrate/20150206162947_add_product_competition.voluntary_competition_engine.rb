@@ -70,7 +70,27 @@ class AddProductCompetition < ActiveRecord::Migration
     end
 
     add_index :tournament_season_participations, [:season_id, :competitor_id], unique: true, name: 'uniq_tournament_season_participation'
+
+    create_table :tournament_season_rankings do |t|
+      t.integer :season_id
+      t.integer :matchday
+      t.boolean :played, default: false
+      t.integer :position
+      t.integer :previous_position
+      t.integer :trend, limit: 1, default: 0
+      t.integer :competitor_id
+      t.integer :points, default: 0
+      t.integer :wins, default: 0
+      t.integer :draws, default: 0
+      t.integer :losses, default: 0
+      t.integer :goal_differential, default: 0
+      t.integer :goals_scored, default: 0
+      t.integer :goals_allowed, default: 0
+      t.timestamps
+    end
     
+    add_index :tournament_season_rankings, [:season_id, :matchday, :position, :competitor_id], unique: true, name: 'uniq_tournament_ranking'
+
     create_table :tournament_matches do |t|
       t.integer :season_id
       t.integer :matchday, limit: 3
@@ -98,6 +118,7 @@ class AddProductCompetition < ActiveRecord::Migration
     drop_table :tournaments
     drop_table :tournament_seasons
     drop_table :tournament_season_participations
+    drop_table :tournament_season_rankings
     drop_table :tournament_matches
   end
 end

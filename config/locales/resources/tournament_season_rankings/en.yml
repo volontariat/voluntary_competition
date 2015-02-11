@@ -1,0 +1,20 @@
+en:
+  tournament_season_rankings:
+    index:
+      title: Ranking
+      empty_collection: No ranking available.
+        
+    general:
+      goals: Goals    
+        
+  activerecord:
+    models:
+      tournament_season_ranking: Tournament Season Ranking
+      
+    attributes:
+      tournament_season_ranking:
+        points: Points
+        wins: Wins
+        draws: Draws
+        losses: Losses
+        goal_differential: Diff
