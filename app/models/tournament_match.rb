@@ -5,11 +5,14 @@ class TournamentMatch < ActiveRecord::Base
   belongs_to :winner_competitor, class_name: 'Competitor'
   belongs_to :loser_competitor, class_name: 'Competitor'
   
+  scope :for_competitor, ->(competitor_id) { where('home_competitor_id = :id OR away_competitor_id = :id', id: competitor_id) }
+  
   validates :season_id, presence: true
   validates :home_competitor_id, presence: true
   validates :away_competitor_id, presence: true
   validates :date, presence: true
   validate :result_not_changed
+  validate :results_for_current_matchday, if: 'home_goals.present? && away_goals.present?'
   
   attr_accessible :season_id, :matchday, :home_competitor_id, :away_competitor_id, :home_goals, :away_goals, :date
 
@@ -61,6 +64,15 @@ class TournamentMatch < ActiveRecord::Base
   def result_not_changed
     if (home_goals_was.present? && away_goals_was.present?) && (home_goals_changed? || away_goals_changed?)
       errors[:base] << I18n.t('activerecord.errors.models.tournament_match.attributes.base.result_cannot_be_changed')
+    end
+  end
+  
+  def results_for_current_matchday
+    unless matchday == season.current_matchday
+      errors[:base] << I18n.t(
+        'activerecord.errors.models.tournament_match.attributes.base.results_only_for_current_matchday',
+        matchday: season.current_matchday
+      )
     end
   end
 end
