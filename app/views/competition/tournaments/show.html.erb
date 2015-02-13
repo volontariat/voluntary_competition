@@ -16,7 +16,7 @@
         <label for="season_id" class="string required" style="display:inline"><%= t('tournament_seasons.general.short_model_name') %></label>&nbsp;&nbsp;
         <%= hidden_field_tag 'matchday', @matchday %>
         <%= select_tag 'season_id', options_for_select(@seasons.map{|s| [s.name || s.id, s.id]}, @season.id), style: 'width:110px' %> 
-        <% if user_signed_in? %>
+        <% if @season.looking_for_competitors? && user_signed_in? %>
           &nbsp;&nbsp;
           <div id="season_participation" style="display:inline;"><%= render partial: 'competition/tournament_seasons/join_or_leave' %></div>
         <% end %>
