@@ -8,7 +8,7 @@ class TournamentSeasonRanking < ActiveRecord::Base
   validates :position, presence: true
   validates :competitor_id, presence: true, uniqueness: { scope: [:season_id, :matchday, :position] }
   
-  attr_accessible :season_id, :matchday, :played, :position, :previous_position, :trend, :competitor_id
+  attr_accessible :season_id, :matchday, :played, :matches, :position, :previous_position, :trend, :competitor_id
   attr_accessible :points, :wins, :draws, :losses, :goals_scored, :goals_allowed
   
   before_save :set_goal_differential
@@ -17,16 +17,18 @@ class TournamentSeasonRanking < ActiveRecord::Base
     position = 1
     
     season.competitors.each do |competitor|
-      season.rankings.create!(matchday: 1, position: position, previous_position: position, competitor_id: competitor.id)
+      played = season.matches.for_competitor(competitor.id).where(matchday: 1).any? ? false : true
+      season.rankings.create!(matchday: 1, played: played, position: position, previous_position: position, competitor_id: competitor.id)
       position += 1
     end
   end
   
   def self.create_by_competitor(competitor_id, matchday, season)
     ranking = season.rankings.where(matchday: matchday - 1, competitor_id: competitor_id).first
+    played = season.matches.for_competitor(competitor_id).where(matchday: matchday).any? ? false : true
     
     season.rankings.create!(
-      matchday: matchday, position: ranking.position, previous_position: ranking.position,
+      matchday: matchday, played: played, matches: ranking.matches, position: ranking.position, previous_position: ranking.position,
       trend: ranking.trend, competitor_id: competitor_id, points: ranking.points, wins: ranking.wins,
       draws: ranking.draws, losses: ranking.losses, goal_differential: ranking.goal_differential,
       goals_scored: ranking.goals_scored, goals_allowed: ranking.goals_allowed
@@ -35,6 +37,7 @@ class TournamentSeasonRanking < ActiveRecord::Base
   
   def consider_match(match)
     self.played = true
+    self.matches += 1
     points_for_match = match.points_for_competitor(competitor_id)
     self.points += points_for_match
     self.wins += {0 => 0, 1 => 0, 3 => 1}[points_for_match] 
@@ -45,10 +48,6 @@ class TournamentSeasonRanking < ActiveRecord::Base
     self.goals_allowed += goals[1]
     self.goal_differential = goals_scored - goals_allowed
     save!
-  end
-  
-  def matches
-    played? ? matchday : matchday - 1
   end
   
   def goal_differential_formatted

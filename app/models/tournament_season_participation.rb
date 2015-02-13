@@ -30,6 +30,7 @@ class TournamentSeasonParticipation < ActiveRecord::Base
   attr_accessible :season_id
   
   after_initialize :set_initial_state
+  before_create :set_user
       
   state_machine :state, initial: :requested do
     state :requested do
@@ -49,7 +50,7 @@ class TournamentSeasonParticipation < ActiveRecord::Base
     end
     
     after_transition [:requested, :denied] => :accepted do |season_participation, transition|
-      season_participation.season.activate! unless season_participation.season.tournament.more_competitors_needed?(season_participation.season)
+      season_participation.season.activate
     end
   end
   
@@ -59,9 +60,13 @@ class TournamentSeasonParticipation < ActiveRecord::Base
     self.state ||= :requested
   end
   
-  def competitors_limit_of_tournament_not_reached 
-    unless season.tournament.more_competitors_needed?(season)
+  def competitors_limit_of_tournament_not_reached
+    unless season.competitors_needed?
       errors[:base] << I18n.t('activerecord.errors.models.tournament_season_participation.attributes.state.tournament_competitors_limit_reached')
     end
+  end
+  
+  def set_user
+    self.user_id = competitor.user_id unless user_id.present?
   end
 end

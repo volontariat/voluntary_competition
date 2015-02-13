@@ -74,6 +74,7 @@ class AddProductCompetition < ActiveRecord::Migration
     create_table :tournament_season_rankings do |t|
       t.integer :season_id
       t.integer :matchday
+      t.integer :matches, default: 0, limit: 3
       t.boolean :played, default: false
       t.integer :position
       t.integer :previous_position
