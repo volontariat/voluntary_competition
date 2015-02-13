@@ -2,8 +2,8 @@
   $('#tournament_season_form').html('<%= escape_javascript render(partial: 'competition/season_participations/form') %>');
 <% else %>
   $('#season_participation').html('<%= escape_javascript render(partial: 'competition/tournament_seasons/join_or_leave') %>');
-  if($('#ui-tabs-1').length == 1 && $('#ui-tabs-1').css('display') != 'none') {
-    $('#ui-tabs-1').html('<%= escape_javascript render(partial: 'competition/season_participations/collection') %>');
+  if($('#ui-tabs-3').length == 1 && $('#ui-tabs-3').css('display') != 'none') {
+    $('#ui-tabs-3').html('<%= escape_javascript render(partial: 'competition/season_participations/collection') %>');
   }
   $('#bootstrap_modal').modal('hide');
 <% end %>
