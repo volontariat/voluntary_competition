@@ -16,4 +16,35 @@ end
 
 FactoryGirl.define do
   Voluntary::Test::RspecHelpers::Factories.code.call(self)
+  
+  factory :game do
+    sequence(:name) { |n| "game #{n}#{r_str}" }
+  end
+  
+  factory :exercise_type do
+    sequence(:name) { |n| "exercise type #{n}#{r_str}" }
+  end  
+  
+  factory :game_and_exercise_type do
+    association :game
+    association :exercise_type
+  end
+  
+  factory :competitor do
+    sequence(:name) { |n| "competitor #{n}#{r_str}" }
+    association :game_and_exercise_type
+    association :user
+  end
+  
+  factory :tournament do
+    association :game_and_exercise_type
+    sequence(:name) { |n| "competitor #{n}#{r_str}" }
+    competitors_limit 3
+    association :user
+  end
+  
+  factory :tournament_season_participation do
+    association :season
+    association :competitor
+  end
 end
