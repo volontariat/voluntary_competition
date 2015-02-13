@@ -1,6 +1,6 @@
 <% if @season.participations.where(user_id: current_user.id).any? %>
   <%= link_to t('general.join_or_leave'), new_competition_season_participation_path(@season.id), class: 'remote_modal_link' %>
-<% elsif @tournament.more_competitors_needed?(@season) %>
+<% elsif @season.competitors_needed? %>
   <%= link_to t('general.join'), new_competition_season_participation_path(@season.id), class: 'remote_modal_link' %>
 <% else %>
   <%= t('tournaments.general.no_more_competitors_needed') %>

@@ -17,17 +17,10 @@ class Tournament < ActiveRecord::Base
   attr_accessor :first_season_name
   
   after_create :create_first_season
-  
-  def more_competitors_needed?(season = nil)
-    season ||= current_season
-    season.no_competitors_needed?(1, competitors_limit: competitors_limit) == false
-  end
     
-  
   private
   
   def create_first_season
-    season = seasons.create!(name: first_season_name)
-    update_attribute(:current_season_id, season.id)
+    update_attribute(:current_season_id, seasons.create!(name: first_season_name).id)
   end
 end
