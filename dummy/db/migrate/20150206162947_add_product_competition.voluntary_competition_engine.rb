@@ -42,6 +42,7 @@ class AddProductCompetition < ActiveRecord::Migration
       t.integer :game_and_exercise_type_id
       t.string :name
       t.integer :competitors_limit, limit: 3
+      t.integer :with_second_leg, default: false
       t.integer :current_season_id
       t.integer :matchdays_per_season, limit: 3
       t.integer :user_id

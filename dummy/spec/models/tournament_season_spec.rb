@@ -55,50 +55,68 @@ describe TournamentSeason do
   end
   
   describe '#generate_matches' do
-    it 'generates all possible matches between the accepted competitors' do
-      @tournament = FactoryGirl.create(:tournament, competitors_limit: 4)
-      season = @tournament.current_season
-      denied_competitor = FactoryGirl.create(:competitor, game_and_exercise_type: @tournament.game_and_exercise_type)
-      FactoryGirl.create(:tournament_season_participation, season: season, competitor: denied_competitor).deny!
-      accepted_competitors = []
+    let(:competitors_limit) { 4 }
+    let(:with_second_leg) { false }
+    
+    before :each do
+      @tournament = FactoryGirl.create(:tournament, competitors_limit: competitors_limit, with_second_leg: with_second_leg)
+      @season = @tournament.current_season
+      @denied_competitor = FactoryGirl.create(:competitor, game_and_exercise_type: @tournament.game_and_exercise_type)
+      FactoryGirl.create(:tournament_season_participation, season: @season, competitor: @denied_competitor).deny!
+      @accepted_competitors = []
       user = FactoryGirl.create(:user)
       
-      4.times do
+      competitors_limit.times do
         competitor = FactoryGirl.create(:competitor, game_and_exercise_type: @tournament.game_and_exercise_type, user: user)
-        accepted_competitors << competitor
-        FactoryGirl.create(:tournament_season_participation, season: season, competitor: competitor).accept!
+        @accepted_competitors << competitor
+        FactoryGirl.create(:tournament_season_participation, season: @season, competitor: competitor).accept!
       end
-      
-      expect(season.matches.where('home_competitor_id = :id OR away_competitor_id = :id', id: denied_competitor.id).count).to be == 0
-      
-      accepted_competitors.each do |competitor|
-        matches = season.matches.where('home_competitor_id = :id OR away_competitor_id = :id', id: competitor.id).order('matchday ASC').to_a
-        expect(matches.map(&:matchday)).to be == [1, 2, 3]
-        #expect([[true, false, true], [false, true, false]].include?(matches.map{|m| m.home_competitor_id == competitor.id })).to be_truthy
-      end
-      
-      expect(season.matchdays).to be == 3
     end
     
-    it 'also works with a uneven number of competitors - bye' do
-      @tournament = FactoryGirl.create(:tournament, competitors_limit: 3)
-      season = @tournament.current_season
-      competitors = []
-      user = FactoryGirl.create(:user)
-      
-      3.times do
-        competitor = FactoryGirl.create(:competitor, game_and_exercise_type: @tournament.game_and_exercise_type, user: user)
-        competitors << competitor
-        FactoryGirl.create(:tournament_season_participation, season: season, competitor: competitor).accept!
+    context 'without second leg' do
+      context 'with even number of competitors' do
+        it 'generates all possible matches between the accepted competitors' do
+          expect(@season.matches.where('home_competitor_id = :id OR away_competitor_id = :id', id: @denied_competitor.id).count).to be == 0
+          
+          @accepted_competitors.each do |competitor|
+            matches = @season.matches.where('home_competitor_id = :id OR away_competitor_id = :id', id: competitor.id).order('matchday ASC').to_a
+            expect(matches.map(&:matchday)).to be == [1, 2, 3]
+            #expect([[true, false, true], [false, true, false]].include?(matches.map{|m| m.home_competitor_id == competitor.id })).to be_truthy
+          end
+          
+          expect(@season.matchdays).to be == 3
+        end
       end
       
-      competitors.each do |competitor|
-        matches = season.matches.where('home_competitor_id = :id OR away_competitor_id = :id', id: competitor.id).order('matchday ASC').to_a
-        expect([[1, 3], [1, 2], [2, 3]].include?(matches.map(&:matchday))).to be_truthy
-        expect([[true, false], [false, true]].include?(matches.map{|m| m.home_competitor_id == competitor.id })).to be_truthy
+      context 'with odd number of competitors' do
+        let(:competitors_limit) { 3 }
+        
+        it 'also works with a uneven number of competitors - bye' do
+          @accepted_competitors.each do |competitor|
+            matches = @season.matches.where('home_competitor_id = :id OR away_competitor_id = :id', id: competitor.id).order('matchday ASC').to_a
+            expect([[1, 3], [1, 2], [2, 3]].include?(matches.map(&:matchday))).to be_truthy
+            expect([[true, false], [false, true]].include?(matches.map{|m| m.home_competitor_id == competitor.id })).to be_truthy
+          end
+          
+          expect(@season.matchdays).to be == 3
+        end
       end
-      
-      expect(season.matchdays).to be == 3
+    end
+    
+    context 'with second leg' do
+      let(:with_second_leg) { true }
+    
+      it 'generates all possible matches between the accepted competitors with second leg' do
+        expect(@season.matches.where('home_competitor_id = :id OR away_competitor_id = :id', id: @denied_competitor.id).count).to be == 0
+        
+        @accepted_competitors.each do |competitor|
+          matches = @season.matches.where('home_competitor_id = :id OR away_competitor_id = :id', id: competitor.id).order('matchday ASC').to_a
+          expect(matches.map(&:matchday)).to be == [1, 2, 3, 4, 5, 6]
+          #expect([[true, false, true, false, true, false], [false, true, false, true, false, true]].include?(matches.map{|m| m.home_competitor_id == competitor.id })).to be_truthy
+        end
+        
+        expect(@season.matchdays).to be == 6
+      end
     end
   end
   

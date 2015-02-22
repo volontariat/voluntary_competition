@@ -100,7 +100,7 @@ class TournamentSeason < ActiveRecord::Base
   end
   
   def generate_matches
-    already_played_matchdays, already_played_competitor_ids, combinations = {}, {}, []
+    already_played_matchdays, already_played_competitor_ids, combinations, primitive_matches = {}, {}, [], {}
     competitor_ids = competitors.map(&:id).shuffle
     
     competitor_ids.each do |competitor_id|
@@ -171,13 +171,25 @@ class TournamentSeason < ActiveRecord::Base
         matches.create!(
           matchday: matchday, home_competitor_id: home_competitor_id, away_competitor_id: away_competitor_id, date: Time.now
         )
-        
+        primitive_matches[matchday] ||= []
+        primitive_matches[matchday] << [home_competitor_id, away_competitor_id]
         combinations.delete found_combination
         already_played_matchdays[competitor_id][matchday] = match_played_home
         already_played_matchdays[other_competitor_id][matchday] = match_played_home ? false : true
       end
     end
-  
+    
+    if tournament.with_second_leg?
+      primitive_matches.keys.sort.each do |matchday|
+        primitive_matches[matchday].each do |match|
+          matches.create!(
+            matchday: rounds + matchday, home_competitor_id: match.last, away_competitor_id: match.first, date: Time.now
+          )
+        end
+      end
+    end
+    
+    rounds = tournament.with_second_leg? ? (rounds * 2) : rounds
     tournament.update_attribute(:matchdays_per_season, rounds)
     self.matchdays = rounds; self.current_matchday = 1; save!
   end
