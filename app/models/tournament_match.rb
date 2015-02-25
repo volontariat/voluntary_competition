@@ -21,6 +21,7 @@ class TournamentMatch < ActiveRecord::Base
   validates :home_competitor_id, presence: true
   validates :away_competitor_id, presence: true
   validates :date, presence: true
+  validate :goals_for_both_sides_or_both_blank
   validate :result_not_changed
   validate :results_for_current_matchday, if: 'home_goals.present? && away_goals.present?'
   
@@ -86,6 +87,12 @@ class TournamentMatch < ActiveRecord::Base
     end
     
     return true
+  end
+  
+  def goals_for_both_sides_or_both_blank
+    if (home_goals.present? && away_goals.blank?) || (away_goals.present? && home_goals.blank?)
+      errors[:base] << I18n.t('activerecord.errors.models.tournament_match.attributes.base.need_goals_for_both_sides')
+    end
   end
   
   def result_not_changed

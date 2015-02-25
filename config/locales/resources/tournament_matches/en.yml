@@ -24,5 +24,6 @@ en:
         tournament_match:
           attributes:
             base:
-              result_cannot_be_changed: Result cannot be changed after once set.
-              results_only_for_current_matchday: You can only enter results for the current matchday %{matchday}.
+              need_goals_for_both_sides: Need goals for both sides!
+              result_cannot_be_changed: Result cannot be changed after once set!
+              results_only_for_current_matchday: You can only enter results for the current matchday %{matchday}!

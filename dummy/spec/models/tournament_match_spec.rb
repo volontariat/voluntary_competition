@@ -19,8 +19,37 @@ describe TournamentMatch do
       create_season
     end
     
+    describe '#goals_for_both_sides_or_both_blank' do
+      it 'avoids passing only goals for one side' do
+        match = @season.matches.where(matchday: 1).first
+        
+        match.valid?
+        
+        expect(match.errors[:base].empty?).to be_truthy
+        
+        match.home_goals = 1
+        
+        match.valid?
+        
+        expect(match.errors[:base]).to include(I18n.t('activerecord.errors.models.tournament_match.attributes.base.need_goals_for_both_sides'))
+        
+        match.home_goals = nil
+        match.away_goals = 1
+        
+        match.valid?
+        
+        expect(match.errors[:base]).to include(I18n.t('activerecord.errors.models.tournament_match.attributes.base.need_goals_for_both_sides'))
+        
+        match.home_goals = 1
+        
+        match.valid?
+        
+        expect(match.errors[:base].empty?).to be_truthy
+      end
+    end
+    
     describe '#result_not_changed' do
-      it 'works' do
+      it 'disables changing of results' do
         match = @season.matches.where(matchday: 1).first
         match.attributes = { home_goals: 1, away_goals: 0 }
         
