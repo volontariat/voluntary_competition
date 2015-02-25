@@ -14,6 +14,7 @@ class Competition::MatchesController < ::Competition::ApplicationController
   
   def updates
     @season = TournamentSeason.find(params[:season_id])
+    @can_update_season = can?(:update, @season)
     
     if params[:matches].present?
       @input_matches = @season.consider_matches(params[:matches], params[:matchday])
