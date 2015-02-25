@@ -1,6 +1,18 @@
 <% if f.object.new_record? %>
-  <%= f.input :exercise_type_id, as: :hidden %>
-  <%= f.input :exercise_type_name, as: :string, required: true, input_html: { autocomplete: 'on', data: { source: autocomplete_competition_exercise_types_path } } %>
-  <%= f.input :game_id, as: :hidden %>
-  <%= f.input :game_name, as: :string, required: true, input_html: { autocomplete: 'on', data: { source: autocomplete_competition_games_path } } %>
+<div class="control-group string required tournament_exercise_type_name">
+  <label for="tournament_exercise_type_name" class="string required control-label">
+    <abbr title="required">*</abbr> <%= t('activerecord.models.exercise_type') %>
+  </label>
+  <div class="controls">
+    <%= f.select :exercise_type_name, ExerciseType.order('name ASC').map{|e| [e.name, e.name]}, { include_blank: true }, { class: 'selectize_select' } %>
+  </div>
+</div>  
+<div class="control-group string required tournament_game_name">
+  <label for="tournament_game_name" class="string required control-label">
+    <abbr title="required">*</abbr> <%= t('activerecord.models.game') %>
+  </label>
+  <div class="controls">
+    <%= f.select :game_name, Game.order('name ASC').map{|g| [g.name, g.name]}, { include_blank: true }, { class: 'selectize_select' } %>
+  </div>
+</div>  
 <% end %>

@@ -11,12 +11,6 @@ class Competition::GamesController < ::Competition::ApplicationController
   def index
   end
   
-  def autocomplete
-    render json: (
-      Game.select('id, name').where("name LIKE ?", "#{params[:term].to_s.strip}%").order(:name).limit(10).map{|a| { id: a.id, value: a.name } }
-    ), root: false
-  end
-  
   def show
     @game = Game.find(params[:id])
   end

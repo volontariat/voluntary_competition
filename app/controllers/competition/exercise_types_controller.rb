@@ -11,12 +11,6 @@ class Competition::ExerciseTypesController < ::Competition::ApplicationControlle
   def index
   end
   
-  def autocomplete
-    render json: (
-      ExerciseType.select('id, name').where("name LIKE ?", "#{params[:term].to_s.strip}%").order(:name).limit(10).map{|a| { id: a.id, value: a.name } }
-    ), root: false
-  end
-  
   def show
     @exercise_type = ExerciseType.find(params[:id])
   end
