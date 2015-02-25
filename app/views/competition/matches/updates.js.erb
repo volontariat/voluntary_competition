@@ -12,6 +12,7 @@
     $('#bracket_matches_spinner').hide();
   <% else %>
     $('#bootstrap_modal').empty();
+    $('#bootstrap_modal').modal('hide');
     $('#tournament_bracket').html('<%= escape_javascript render(partial: 'competition/tournament_seasons/bracket') %>');
   <% end %>
 <% else %>
@@ -28,3 +29,4 @@
 <% end %>
 
 $('#matches_spinner').hide();
+$('.datetime_picker').datetimepicker()
