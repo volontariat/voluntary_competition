@@ -1,12 +1,12 @@
 require 'spec_helper'
 
 def create_season
-  tournament = FactoryGirl.create(:tournament, competitors_limit: 3)
+  tournament = FactoryGirl.create(:tournament, system_type: system_type, with_second_leg: with_second_leg, competitors_limit: competitors_limit)
   @season = tournament.current_season
   competitors = []
   user = FactoryGirl.create(:user)
   
-  3.times do
+  competitors_limit.times do
     competitor = FactoryGirl.create(:competitor, game_and_exercise_type: tournament.game_and_exercise_type, user: user)
     competitors << competitor
     FactoryGirl.create(:tournament_season_participation, season: @season, competitor: competitor).accept!
@@ -14,6 +14,10 @@ def create_season
 end
 
 describe TournamentMatch do
+  let(:system_type) { 0 }
+  let(:with_second_leg) { false }
+  let(:competitors_limit) { 3 }
+  
   describe 'validations' do
     before :each do
       create_season
@@ -89,6 +93,57 @@ describe TournamentMatch do
               matchday: 1
             )
           )
+        end
+      end
+    end
+    
+    describe '#result_of_both_round_matches_is_not_a_draw' do
+      let(:with_second_leg) { true }
+      
+      context 'single elimination tournament with second leg' do
+        let(:system_type) { 1 }
+        let(:competitors_limit) { 4 }
+        
+        it 'denies result for second leg match if result of both matches is a draw' do
+          matches = @season.matches.where(matchday: 1).order('created_at ASC').to_a
+          @season.consider_matches(
+            { 
+              matches[0].id.to_s => { 'home_goals' => '1', 'away_goals' => '0' },
+              matches[1].id.to_s => { 'home_goals' => '2', 'away_goals' => '0' }  
+            }, 
+            1
+          )
+          
+          match = @season.matches.for_competitors(matches[0].home_competitor_id, matches[0].away_competitor_id).where(matchday: 2).order('created_at ASC').first
+          match.home_goals = 1
+          match.away_goals = 0
+          
+          match.valid?
+          
+          expect(match.errors[:base]).to include(
+            I18n.t('activerecord.errors.models.tournament_match.attributes.base.result_of_both_matches_cant_be_a_draw')
+          )
+          
+          match.home_goals = 2
+          
+          match.valid?
+          
+          expect(match.errors[:base].empty?).to be_truthy
+        end
+      end
+      
+      context 'round-robin tournament with second leg' do
+        it 'accepts result for second leg match if result of both matches is a draw' do
+          @season.matchdays.times do |matchday|
+            matchday += 1
+            results = {}
+            
+            matches = @season.matches.where(matchday: matchday).order('created_at ASC').each do |match|
+              results[match.id] = { 'home_goals' => '1', 'away_goals' => '1' }
+            end
+            
+            expect(@season.consider_matches(results, matchday).select{|m| !m.errors.empty? }.none?).to be_truthy
+          end
         end
       end
     end

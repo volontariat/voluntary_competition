@@ -27,3 +27,4 @@ en:
               need_goals_for_both_sides: Need goals for both sides!
               result_cannot_be_changed: Result cannot be changed after once set!
               results_only_for_current_matchday: You can only enter results for the current matchday %{matchday}!
+              result_of_both_matches_cant_be_a_draw: Result of first and second leg match can't be a draw!

@@ -24,6 +24,7 @@ class TournamentMatch < ActiveRecord::Base
   validate :goals_for_both_sides_or_both_blank
   validate :result_not_changed
   validate :results_for_current_matchday, if: 'home_goals.present? && away_goals.present?'
+  validate :result_of_both_round_matches_is_not_a_draw, if: 'home_goals.present? && away_goals.present? && season.tournament.is_single_elimination? && season.tournament.with_second_leg?'
   
   attr_accessible :season_id, :round, :matchday, :home_competitor_id, :away_competitor_id, :home_goals, :away_goals, :date
 
@@ -107,6 +108,14 @@ class TournamentMatch < ActiveRecord::Base
         'activerecord.errors.models.tournament_match.attributes.base.results_only_for_current_matchday',
         matchday: season.current_matchday
       )
+    end
+  end
+  
+  def result_of_both_round_matches_is_not_a_draw
+    first_match = season.matches.for_competitors(home_competitor_id, away_competitor_id).where(round: round, matchday: matchday - 1).first
+    
+    if first_match && TournamentMatch.winner_of_two_matches([first_match, self]).nil?
+      errors[:base] << I18n.t('activerecord.errors.models.tournament_match.attributes.base.result_of_both_matches_cant_be_a_draw')
     end
   end
 end
