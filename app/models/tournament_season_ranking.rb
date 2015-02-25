@@ -25,12 +25,16 @@ class TournamentSeasonRanking < ActiveRecord::Base
   
   def self.create_by_competitor(competitor_id, matchday, season)
     ranking = season.rankings.where(matchday: matchday - 1, competitor_id: competitor_id).first
-    played = season.matches.for_competitor(competitor_id).where(matchday: matchday).any? ? false : true
+    played = if season.tournament.is_round_robin? 
+      season.matches.for_competitor(competitor_id).where(matchday: matchday).any? ? false : true
+    elsif season.tournament.is_single_elimination?
+      false
+    end
     
     season.rankings.create!(
       matchday: matchday, played: played, matches: ranking.matches, position: ranking.position, previous_position: ranking.position,
       trend: ranking.trend, competitor_id: competitor_id, points: ranking.points, wins: ranking.wins,
-      draws: ranking.draws, losses: ranking.losses, goal_differential: ranking.goal_differential,
+      draws: ranking.draws, losses: ranking.losses,
       goals_scored: ranking.goals_scored, goals_allowed: ranking.goals_allowed
     )
   end

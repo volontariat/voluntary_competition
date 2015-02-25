@@ -39,11 +39,12 @@ class AddProductCompetition < ActiveRecord::Migration
 
     create_table :tournaments do |t|
       t.integer :game_and_exercise_type_id
+      t.integer :system_type, limit: 2
       t.string :name
-      t.integer :competitors_limit, limit: 3
-      t.integer :with_second_leg, default: false
+      t.integer :competitors_limit, limit: 2
+      t.boolean :with_second_leg, default: false
       t.integer :current_season_id
-      t.integer :matchdays_per_season, limit: 3
+      t.integer :matchdays_per_season, limit: 2
       t.integer :user_id
       t.timestamps
     end
@@ -53,8 +54,8 @@ class AddProductCompetition < ActiveRecord::Migration
     create_table :tournament_seasons do |t|
       t.integer :tournament_id
       t.string :name
-      t.integer :matchdays, limit: 3
-      t.integer :current_matchday, limit: 3
+      t.integer :matchdays, limit: 2
+      t.integer :current_matchday, limit: 2
       t.string :state
       t.timestamps
     end
@@ -74,11 +75,11 @@ class AddProductCompetition < ActiveRecord::Migration
     create_table :tournament_season_rankings do |t|
       t.integer :season_id
       t.integer :matchday
-      t.integer :matches, default: 0, limit: 3
+      t.integer :matches, default: 0, limit: 2
       t.boolean :played, default: false
       t.integer :position
       t.integer :previous_position
-      t.integer :trend, limit: 1, default: 0
+      t.integer :trend, limit: 2, default: 0
       t.integer :competitor_id
       t.integer :points, default: 0
       t.integer :wins, default: 0
@@ -94,7 +95,8 @@ class AddProductCompetition < ActiveRecord::Migration
 
     create_table :tournament_matches do |t|
       t.integer :season_id
-      t.integer :matchday, limit: 3
+      t.integer :round, limit: 2
+      t.integer :matchday, limit: 2
       t.integer :home_competitor_id
       t.integer :away_competitor_id
       t.integer :home_goals
@@ -104,6 +106,7 @@ class AddProductCompetition < ActiveRecord::Migration
       t.boolean :draw
       t.datetime :date
       t.string :state
+      t.timestamps
     end
     
     add_index :tournament_matches, [:season_id, :matchday]

@@ -38,6 +38,7 @@ FactoryGirl.define do
   
   factory :tournament do
     association :game_and_exercise_type
+    system_type 0
     sequence(:name) { |n| "competitor #{n}#{r_str}" }
     competitors_limit 3
     association :user
@@ -46,5 +47,8 @@ FactoryGirl.define do
   factory :tournament_season_participation do
     association :season
     association :competitor
+  end
+  
+  factory :tournament_match do
   end
 end

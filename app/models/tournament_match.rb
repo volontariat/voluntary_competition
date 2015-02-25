@@ -7,6 +7,16 @@ class TournamentMatch < ActiveRecord::Base
   
   scope :for_competitor, ->(competitor_id) { where('home_competitor_id = :id OR away_competitor_id = :id', id: competitor_id) }
   
+  scope :for_competitors, ->(competitor_id, other_competitor_id) do
+    where(
+      %Q{
+        (home_competitor_id = :competitor_id OR away_competitor_id = :competitor_id) AND 
+        (home_competitor_id = :other_competitor_id OR away_competitor_id = :other_competitor_id)
+      }, 
+      competitor_id: competitor_id, other_competitor_id: other_competitor_id
+    )
+  end
+  
   validates :season_id, presence: true
   validates :home_competitor_id, presence: true
   validates :away_competitor_id, presence: true
@@ -14,9 +24,26 @@ class TournamentMatch < ActiveRecord::Base
   validate :result_not_changed
   validate :results_for_current_matchday, if: 'home_goals.present? && away_goals.present?'
   
-  attr_accessible :season_id, :matchday, :home_competitor_id, :away_competitor_id, :home_goals, :away_goals, :date
+  attr_accessible :season_id, :round, :matchday, :home_competitor_id, :away_competitor_id, :home_goals, :away_goals, :date
 
   before_validation :set_winner_and_loser_or_draw
+  
+  def self.winner_of_two_matches(matches)
+    competitor_goals = matches[0].home_goals + matches[1].away_goals
+    other_competitor_goals = matches[0].away_goals + matches[1].home_goals
+    
+    if competitor_goals > other_competitor_goals
+      matches[0].home_competitor_id
+    elsif other_competitor_goals > competitor_goals
+      matches[0].away_competitor_id
+    elsif matches[1].away_goals > matches[0].away_goals
+      matches[0].home_competitor_id
+    elsif matches[0].away_goals > matches[1].away_goals
+      matches[0].away_competitor_id
+    else
+      nil
+    end
+  end
   
   def points_for_competitor(competitor_id)
     if draw

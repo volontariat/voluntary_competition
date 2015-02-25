@@ -17,3 +17,11 @@ en:
     attributes:
       tournament:
         first_season_name: Name of first season
+        
+    errors:
+      models:
+        tournament:
+          attributes:
+            system_type:
+              competitors_limit_must_be_power_of_two: Competitors limit must be a power of two!
+              competitors_limit_should_be_at_least_4: Competitors limit should be at least 4!

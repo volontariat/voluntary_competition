@@ -3,7 +3,9 @@ en:
     index:
       title: Matches
       empty_collection: No matches available.
-        
+      invalid: Some matches are invalid, see errors below.  
+    updates:
+      no_results: No results passed!
     general:
       home: Home
       away: Away

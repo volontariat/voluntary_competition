@@ -1,0 +1,54 @@
+{
+  results: [
+    { 
+      @matches[0].id.to_s => { 'home_goals' => '1', 'away_goals' => '1' },
+      @matches[1].id.to_s => { 'home_goals' => '1', 'away_goals' => '0' }  
+    }, 
+    1
+  ],
+  current_matchday_after_results: 2,
+  rankings: {
+    @matches[0].home_competitor_id => { 
+      1 => {
+        played: true, matches: 1, position: [2, 3], points: 1, wins: 0, draws: 1, losses: 0, goal_differential: 0,
+        goals_scored: 1, goals_allowed: 1 
+      },
+      2 => {
+        played: false, matches: 1, position: [2, 3], points: 1, wins: 0, draws: 1, losses: 0, goal_differential: 0,
+        goals_scored: 1, goals_allowed: 1 
+      }
+    },
+    @matches[0].away_competitor_id => { 
+      1 => {
+        played: true, matches: 1, position: [2, 3], points: 1, wins: 0, draws: 1, losses: 0, goal_differential: 0,
+        goals_scored: 1, goals_allowed: 1
+      },
+      2 => {
+        played: false, matches: 1, position: [2, 3], points: 1, wins: 0, draws: 1, losses: 0, goal_differential: 0,
+        goals_scored: 1, goals_allowed: 1
+      }
+    },
+    @matches[1].home_competitor_id => { 
+      1 => {
+        played: true, matches: 1, position: 1, points: 3, wins: 1, draws: 0, losses: 0, goal_differential: 1,
+        goals_scored: 1, goals_allowed: 0 
+      },
+      2 => {
+        played: false, matches: 1, position: 1, points: 3, wins: 1, draws: 0, losses: 0, goal_differential: 1,
+        goals_scored: 1, goals_allowed: 0,
+        trend: if 1 == @previous_position_1; 0; elsif 1 < @previous_position_1; 1; else; 2; end
+      }
+    },
+    @matches[1].away_competitor_id => { 
+      1 => {
+        played: true, matches: 1, position: 4, points: 0, wins: 0, draws: 0, losses: 1, goal_differential: -1,
+        goals_scored: 0, goals_allowed: 1 
+      },
+      2 => {
+        played: false, matches: 1, position: 4, points: 0, wins: 0, draws: 0, losses: 1, goal_differential: -1,
+        goals_scored: 0, goals_allowed: 1,
+        trend: if 4 == @previous_position_2; 0; elsif 4 < @previous_position_2; 1; else; 2; end
+      }
+    }
+  }
+}

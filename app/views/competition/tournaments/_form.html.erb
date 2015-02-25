@@ -3,6 +3,7 @@
   
   <div class="form-inputs">
     <%= render partial: 'shared/game_and_exercise_type_association', locals: { f: f } %>
+    <%= f.input :system_type, as: :radio_buttons, collection: Tournament::SYSTEM_TYPES.each_with_index.map { |x,i| [x.titleize, i] } %>
     <%= f.input :name %>
     <%= f.input :competitors_limit %>
     <%= f.input :with_second_leg %>
