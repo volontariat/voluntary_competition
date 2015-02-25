@@ -1,8 +1,30 @@
-<% if @matches.select{ |m| !m.errors.empty? }.any? %>
-  $('#ui-tabs-2').html('<%= escape_javascript render(partial: 'competition/matches/collection') %>');
+<% if params[:from_bracket] %>
+  <% if @input_matches.empty? %>
+    alert("<%= t('tournament_matches.updates.no_results') %>");
+    $('#bracket_matches_spinner').hide();
+  <% elsif @input_matches.select{ |m| !m.errors.empty? }.any? %>
+    <% @matches = @input_matches.select{ |m| !m.errors.empty? } %>
+    $('#bootstrap_modal').html('<%= escape_javascript render(partial: 'shared/layouts/twitter_bootstrap/modal', locals: { title: t('tournament_matches.index.invalid') }) %>');
+    $('.modal-body').html('<%= escape_javascript render(partial: 'competition/matches/collection') %>');
+    $('#bootstrap_modal').css('overflow-y', 'auto');
+    $('#bootstrap_modal').modal('show');
+    $('.modal-footer').hide();
+    $('#bracket_matches_spinner').hide();
+  <% else %>
+    $('#bootstrap_modal').empty();
+    $('#tournament_bracket').html('<%= escape_javascript render(partial: 'competition/tournament_seasons/bracket') %>');
+  <% end %>
 <% else %>
-  $('.form_errors').remove()
-  alert("<%= I18n.t('general.form.successfully_updated') %>");
+  <% if @input_matches.empty? %>
+    alert("<%= t('tournament_matches.updates.no_results') %>");
+  <% elsif @input_matches.select{ |m| !m.errors.empty? }.any? %>
+    <% @matches = @input_matches %>
+    matchesTabAnchorId = $('.ui-tabs-anchor:contains("<%= t('tournament_matches.index.title') %>")').prop('id')
+    $('#ui-tabs-' + matchesTabAnchorId.split('-')[2]).html('<%= escape_javascript render(partial: 'competition/matches/collection') %>');
+  <% else %>
+    $('.form_errors').remove()
+    alert("<%= t('general.form.successfully_updated') %>");
+  <% end %>
 <% end %>
 
-$('#matches_spinner').hide()
+$('#matches_spinner').hide();

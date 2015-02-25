@@ -15,14 +15,14 @@
       <%= form_tag competition_tournament_path(@tournament), method: :get, class: 'simple_form form-horizontal' do %>
         <label for="season_id" class="string required" style="display:inline"><%= t('tournament_seasons.general.short_model_name') %></label>&nbsp;&nbsp;
         <%= hidden_field_tag 'matchday', @matchday %>
-        <%= select_tag 'season_id', options_for_select(@seasons.map{|s| [s.name || s.id, s.id]}, @season.id), style: 'width:110px' %> 
+        <%= select_tag 'season_id', options_for_select(@seasons.map{|s| [s.name.blank? ? s.id : s.name, s.id]}, @season.id), style: 'width:110px' %> 
         <% if @season.looking_for_competitors? && user_signed_in? %>
           &nbsp;&nbsp;
           <div id="season_participation" style="display:inline;"><%= render partial: 'competition/tournament_seasons/join_or_leave' %></div>
         <% end %>
       <% end %>
     </td>
-<% if @season.matchdays > 0 %>
+<% if @season.matchdays.to_i > 0 %>
     <td>
       <%= form_tag competition_tournament_path(@tournament), method: :get, class: 'simple_form form-horizontal' do %>
         <label for="matchday" class="string required" style="display:inline"><%= t('activerecord.attributes.tournament_match.matchday') %></label>&nbsp;&nbsp;
@@ -44,6 +44,12 @@
     <li>
       <a href="<%= competition_season_matches_path(@season.id, matchday: @matchday) %>">
         <%= t('tournament_matches.index.title') %>
+        <%= image_tag 'voluntary/spinner.gif', class: 'ajax_spinner hide' %>
+      </a>
+    </li>
+    <li>
+      <a href="<%= bracket_competition_season_path(@season.id) %>">
+        <%= t('tournament_seasons.bracket.title') %>
         <%= image_tag 'voluntary/spinner.gif', class: 'ajax_spinner hide' %>
       </a>
     </li>

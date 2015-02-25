@@ -13,3 +13,5 @@ $(document).ready ->
 
   $(document.body).on "ajax:beforeSend", "#matches_form", ->
     $("#matches_spinner").show()
+    
+  new window.VoluntaryCompetition.Seasons.BracketView()

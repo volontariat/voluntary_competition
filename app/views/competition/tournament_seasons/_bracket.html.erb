@@ -1,0 +1,75 @@
+<%= form_tag updates_competition_season_matches_path(@season.id), method: :put, remote: true, id: 'bracket_matches_form' do %>
+  <%= hidden_field_tag 'from_bracket', true %>
+  <%= hidden_field_tag 'matchday', @season.current_matchday %>
+  <table cellspacing="0" cellpadding="0" border="0" style="font-size:70%; margin:1em 2em 1em 1em; border-collapse: separate;">
+    <tbody>
+      <tr>
+        <td>&nbsp;</td>
+    <% @rounds.times do |round| %>      
+      <% with_second_leg = @with_second_leg && round + 1 != @rounds ? true : false %>
+        <td style="border:1px solid #AAAAAA; background:#F2F2F2; text-align:center;" colspan="<%= with_second_leg ? 4 : 2 %>"><%= round_title(round + 1, @rounds) %></td>
+      <% unless round + 1 == @rounds %>    
+        <td colspan="2"></td>
+      <% end %>
+    <% end %>      
+      </tr>
+      <tr>
+        <td>&nbsp;</td>     
+    <% @rounds.times do |round| %>      
+        <td style="width:125px;">&nbsp;</td>
+        <td style="width:40px;">&nbsp;</td>
+      <% if @with_second_leg && round + 1 != @rounds %>
+        <td style="width:40px;">&nbsp;</td>
+        <td style="width:40px;">&nbsp;</td>
+      <% end %>  
+      <% unless round + 1 == @rounds %>    
+        <td style="width:15px;">&nbsp;</td>
+        <td style="width:15px;">&nbsp;</td>
+      <% end %>
+    <% end %>
+      </tr> 
+    <% @matches[1][1].each do |match| %>
+      <% if @round_matches_index[1] % 2 == 0 %>
+        <% rowspan = @round_matches_index[1] == 0 ? nil : 2 %>
+      <%= render partial: 'competition/tournament_seasons/first_round_bracket_row', locals: { 
+        rowspan: rowspan, matches: round_matches_for_competitors(1, [match.home_competitor_id, match.away_competitor_id]), side: :home 
+      } %>
+        <% unless @round_matches_index[1] == 0 %>    
+      <tr>
+        <td style="height:7px;"></td>
+      </tr>
+        <% end %>
+      <%= render partial: 'competition/tournament_seasons/first_round_bracket_row', locals: { 
+        rowspan: 2, matches: round_matches_for_competitors(1, [match.home_competitor_id, match.away_competitor_id]), 
+        side: :away, fourth_rowspan: 6, fourth_col_style: 'border:2px solid #000000; border-left-width:0px;'
+      } %> 
+      <% else %>
+      <%= render partial: 'competition/tournament_seasons/first_round_bracket_row', locals: { 
+        with_fourth_col: false, rowspan: 2, matches: round_matches_for_competitors(1, [match.home_competitor_id, match.away_competitor_id]), side: :home 
+      } %>
+      <tr>
+        <td style="height:7px;"></td>
+      </tr>
+        <% rowspan = @round_matches_index[1] == @matches[1][1].length - 1 ? nil : 2 %>
+      <%= render partial: 'competition/tournament_seasons/first_round_bracket_row', locals: { 
+        rowspan: rowspan, matches: round_matches_for_competitors(1, [match.home_competitor_id, match.away_competitor_id]), 
+        side: :away, fourth_col_style: 'border:0px solid #000000; border-top-width:2px;'
+      } %>
+      <% end %>
+      
+      <% @rounds.times.to_a.map{|r| r + 1}[1..-1].each do |round| %>
+        <% if match_for_round_after_first_one?(@round_matches_index[1], round) %>
+        <%= render partial: 'competition/tournament_seasons/after_first_round_bracket_match', locals: { round: round } %>
+          <% @round_matches_index[round]  += 1 %>
+        <% end %>
+      <% end %>
+      
+      <% @round_matches_index[1] += 1 %>
+    <% end %>
+    </tbody>
+  </table>
+  
+  <% if @can_update_season %>
+  <p><%= submit_tag t('general.submit'), class: 'btn' %> <%= image_tag 'voluntary/spinner.gif', class: 'hide', id: 'bracket_matches_spinner' %></p>
+  <% end %>
+<% end %>

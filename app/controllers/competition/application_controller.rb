@@ -6,6 +6,6 @@ class Competition::ApplicationController < ::ApplicationController
   end
 
   def voluntary_application_javascripts
-    ['voluntary/application', 'application'] 
+    ['voluntary/application', 'voluntary_competition/application', 'application'] 
   end
 end

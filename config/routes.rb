@@ -17,7 +17,7 @@ Rails.application.routes.draw do
     
     resources :tournaments
     
-    resources :seasons do
+    resources :seasons, only: [] do
       resources :participations, controller: 'season_participations', only: [:index, :new, :create] 
       resources :rankings, only: [:index]
       
@@ -25,6 +25,10 @@ Rails.application.routes.draw do
         collection do
           put :updates
         end
+      end
+      
+      member do
+        get :bracket
       end
     end
     

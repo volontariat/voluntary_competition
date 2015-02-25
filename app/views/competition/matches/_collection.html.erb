@@ -2,6 +2,7 @@
 <p><%= I18n.t('tournament_matches.index.empty_collection')%></p>
 <% else %>
   <%= form_tag updates_competition_season_matches_path(@season.id), method: :put, remote: true, id: 'matches_form' do %>
+    <%= hidden_field_tag 'from_bracket', params[:from_bracket] %>
     <%= hidden_field_tag 'matchday', params[:matchday] %>
     <table class="table table-striped" style="width:700px">
       <thead>
@@ -15,9 +16,16 @@
       <tbody>
     <% @matches.each do |match| %>
       <%= fields_for 'matches[]', match do |f| %>
+        <% unless match.errors.empty? %>
+          <tr class="form_errors">
+            <td colspan="4">
+              <%= render partial: 'shared/form/error_messages', locals: { resource: match } %>
+            </td>
+          </tr>
+        <% end %>  
           <tr class="<%= cycle('odd', 'even') %>">
             <td>
-        <% if can? :update, @season %>
+        <% if @can_update_season %>
               <div class="datetime_picker" class="input-append date">
                 <%= f.text_field :date, 'data-format' => 'yyyy-MM-dd hh:mm:ss', style: 'width:160px' %>
                 <span class="add-on">
@@ -32,26 +40,19 @@
             <td><%= link_to match.home_competitor.name, competition_competitor_path(match.home_competitor_id) %>
             <td><%= link_to match.away_competitor.name, competition_competitor_path(match.away_competitor_id) %>
             <td>
-        <% if can? :update, @season %>
+        <% if @can_update_season %>
               <%= f.text_field :home_goals, style: 'width:25px' %>&nbsp;&nbsp;-&nbsp;&nbsp;<%= f.text_field :away_goals, style: 'width:25px' %>
         <% else %>
               <%= match.home_goals.blank? ? '-' : "#{match.home_goals}:#{match.away_goals}" %>
         <% end %>
             </td>
           </tr>
-        <% unless match.errors.empty? %>
-          <tr class="form_errors">
-            <td colspan="4">
-              <%= render partial: 'shared/form/error_messages', locals: { resource: match } %>
-            </td>
-          </tr>
-        <% end %>  
       <% end %>
     <% end %>
       </tbody>
     </table>
-    <% if can? :update, @season %>
-    <p><%= submit_tag t('general.submit') %> <%= image_tag 'voluntary/spinner.gif', class: 'hide', id: 'matches_spinner' %></p>
+    <% if @can_update_season %>
+    <p><%= submit_tag t('general.submit'), class: 'btn' %> <%= image_tag 'voluntary/spinner.gif', class: 'hide', id: 'matches_spinner' %></p>
     <% end %>
   <% end %>
 <% end %>
