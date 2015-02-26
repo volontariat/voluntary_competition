@@ -149,6 +149,89 @@ describe TournamentMatch do
     end
   end
   
+  describe '.direct_comparison' do
+    it 'returns either the winner, nil for draws or -1 if there are no matches' do
+      expect(TournamentMatch.direct_comparison([FactoryGirl.build(:tournament_match)])).to be == -1
+      
+      expect(
+        TournamentMatch.direct_comparison(
+          [FactoryGirl.build(:tournament_match, winner_competitor_id: 1)]
+        )
+      ).to be == 1
+      
+      expect(
+        TournamentMatch.direct_comparison(
+          [
+            FactoryGirl.build(
+              :tournament_match, draw: true, home_competitor_id: 1, away_competitor_id: 2, home_goals: 1, away_goals: 1
+            ),
+            FactoryGirl.build(
+              :tournament_match, draw: true, home_competitor_id: 2, away_competitor_id: 1, home_goals: 2, away_goals: 2
+            )
+          ]
+        )
+      ).to be == 1
+      
+      expect(TournamentMatch.direct_comparison([])).to be == -1
+    end
+  end
+  
+  describe '.winner_of_two_matches' do
+    it 'returns winner of two matches like this if possible else nil' do
+      expect(
+        TournamentMatch.winner_of_two_matches(
+          [
+            FactoryGirl.build(
+              :tournament_match, home_competitor_id: 1, away_competitor_id: 2, home_goals: 1, away_goals: 1
+            ),
+            FactoryGirl.build(
+              :tournament_match, home_competitor_id: 2, away_competitor_id: 1, home_goals: 0, away_goals: 1
+            )
+          ]
+        )
+      ).to be == 1
+      
+      expect(
+        TournamentMatch.winner_of_two_matches(
+          [
+            FactoryGirl.build(
+              :tournament_match, home_competitor_id: 1, away_competitor_id: 2, home_goals: 1, away_goals: 1
+            ),
+            FactoryGirl.build(
+              :tournament_match, home_competitor_id: 2, away_competitor_id: 1, home_goals: 1, away_goals: 0
+            )
+          ]
+        )
+      ).to be == 2
+      
+      expect(
+        TournamentMatch.winner_of_two_matches(
+          [
+            FactoryGirl.build(
+              :tournament_match, home_competitor_id: 1, away_competitor_id: 2, home_goals: 1, away_goals: 1
+            ),
+            FactoryGirl.build(
+              :tournament_match, home_competitor_id: 2, away_competitor_id: 1, home_goals: 2, away_goals: 2
+            )
+          ]
+        )
+      ).to be == 1
+      
+      expect(
+        TournamentMatch.winner_of_two_matches(
+          [
+            FactoryGirl.build(
+              :tournament_match, home_competitor_id: 1, away_competitor_id: 2, home_goals: 2, away_goals: 2
+            ),
+            FactoryGirl.build(
+              :tournament_match, home_competitor_id: 2, away_competitor_id: 1, home_goals: 1, away_goals: 1
+            )
+          ]
+        )
+      ).to be == 2
+    end
+  end
+  
   describe '#points_for_competitor' do
     context 'draw' do
       it 'returns 1' do

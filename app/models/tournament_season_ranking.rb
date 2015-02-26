@@ -5,6 +5,7 @@ class TournamentSeasonRanking < ActiveRecord::Base
   belongs_to :competitor
   
   validates :season_id, presence: true
+  validates :matchday, presence: true
   validates :position, presence: true
   validates :competitor_id, presence: true, uniqueness: { scope: [:season_id, :matchday, :position] }
   
@@ -37,6 +38,123 @@ class TournamentSeasonRanking < ActiveRecord::Base
       draws: ranking.draws, losses: ranking.losses,
       goals_scored: ranking.goals_scored, goals_allowed: ranking.goals_allowed
     )
+  end
+  
+  def self.sort(season, matchday)
+    working_rankings = season.rankings.where(matchday: matchday)
+    
+    if season.tournament.is_round_robin?
+      working_rankings = working_rankings.order('points DESC, goal_differential DESC, goals_scored DESC').to_a
+    else
+      working_rankings = working_rankings.order('points DESC, matches DESC, goal_differential DESC, goals_scored DESC').to_a
+    end
+    
+    position, positions, ties = 1, {}, {}
+    
+    working_rankings.each do |r1|
+      tie_key = ''
+      
+      is_tie = if season.tournament.is_round_robin?
+        tie_key = "#{r1.points},#{r1.goal_differential},#{r1.goals_scored}"
+        working_rankings.select do |r2| 
+          r2.id != r1.id && r2.points == r1.points && r2.goal_differential == r1.goal_differential && r2.goals_scored == r1.goals_scored
+        end.any?
+      else
+        tie_key = "#{r1.points},#{r1.matches},#{r1.goal_differential},#{r1.goals_scored}"
+        working_rankings.select do |r2| 
+          r2.id != r1.id && r2.points == r1.points && r2.matches == r1.matches && r2.goal_differential == r1.goal_differential && r2.goals_scored == r1.goals_scored
+        end.any?
+      end
+      
+      if is_tie
+        ties[tie_key] ||= { positions: [], rankings: [] }
+        ties[tie_key][:positions] << position
+        ties[tie_key][:rankings] << r1
+      else
+        positions[position] = r1
+      end
+      
+      position += 1
+    end
+    
+    positions.merge!(resolve_ties(season, ties)) unless ties.empty?
+    
+    positions.each do |position, ranking|
+      ranking.position = position
+      ranking.calculate_trend
+      ranking.save!
+    end
+  end
+  
+  def self.resolve_ties(season, ties)
+    positions = {}
+    
+    ties.each do |tie_key, hash|
+      combinations = TournamentMatch.combinations(hash[:rankings].map(&:competitor_id))
+      rankings = []
+      
+      matches = combinations.map{|c| TournamentMatch.rated.for_competitors(*c) }.flatten
+      
+      matches.each do |match|
+        # points DESC, goal_differential DESC, goals_scored DESC
+        [match.home_competitor_id, match.away_competitor_id].each do |competitor_id|
+          ranking_index = rankings.find_index { |r| r[:competitor_id] == competitor_id }
+          
+          if ranking_index.nil?
+            rankings << { competitor_id: competitor_id, points: 0, goal_differential: 0, goals_scored: 0, goals_allowed: 0 }
+            ranking_index = rankings.find_index { |r| r[:competitor_id] == competitor_id }
+          end
+          
+          goals = match.goals_for_competitor(competitor_id) 
+          rankings[ranking_index][:goals_scored] += goals[0]
+          rankings[ranking_index][:goals_allowed] += goals[1]
+          rankings[ranking_index][:goal_differential] = rankings[ranking_index][:goals_scored] - rankings[ranking_index][:goals_allowed]
+          rankings[ranking_index][:points] += match.points_for_competitor(competitor_id)
+        end
+      end
+      
+      # set winner and loser of combinations
+      direct_comparisons = {}
+      
+      combinations.each do |combination|
+        winner_competitor_id = TournamentMatch.direct_comparison(
+          matches.select{|m| combination.include?(m.home_competitor_id) && combination.include?(m.away_competitor_id)}
+        )
+        
+        next if winner_competitor_id == -1
+        
+        combination.each do |competitor_id|
+          other_competitor_id = combination.select{|id| id != competitor_id }.first
+          direct_comparisons[competitor_id] ||= {}
+          direct_comparisons[competitor_id][other_competitor_id] = winner_competitor_id.nil? || winner_competitor_id != competitor_id ? 0 : 1
+        end
+      end
+       
+      # consider 0:0 for competitors of combinations without match(es)
+      combinations.each do |combination|
+        next if matches.select{|m| combination.include?(m.home_competitor_id) && combination.include?(m.away_competitor_id)}.any?  
+        
+        combination.each do |competitor_id|
+          ranking_index = rankings.find_index { |r| r[:competitor_id] == competitor_id }
+            
+          if ranking_index.nil?
+            rankings << { competitor_id: competitor_id, points: 0, goal_differential: 0, goals_scored: 0, goals_allowed: 0 }
+            ranking_index = rankings.find_index { |r| r[:competitor_id] == competitor_id }
+          end
+           
+          other_competitor_id = combination.select{|id| id != competitor_id }.first
+          rankings[ranking_index][:not_played_competitors] ||= []
+          rankings[ranking_index][:not_played_competitors] << other_competitor_id   
+          rankings[ranking_index][:points] += 1
+        end
+      end
+      
+      ::VoluntaryCompetition::Sorter.new(rankings, direct_comparisons).sort.each do |ranking|
+        positions[hash[:positions].shift] = hash[:rankings].select{|r| r.competitor_id == ranking[:competitor_id] }.first
+      end
+    end
+    
+    positions
   end
   
   def consider_match(match)

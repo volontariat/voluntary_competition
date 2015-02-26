@@ -17,6 +17,8 @@ class TournamentMatch < ActiveRecord::Base
     )
   end
   
+  scope :rated, -> { where('winner_competitor_id IS NOT NULL OR draw IS NOT NULL') }
+  
   validates :season_id, presence: true
   validates :home_competitor_id, presence: true
   validates :away_competitor_id, presence: true
@@ -29,6 +31,56 @@ class TournamentMatch < ActiveRecord::Base
   attr_accessible :season_id, :round, :matchday, :home_competitor_id, :away_competitor_id, :home_goals, :away_goals, :date
 
   before_validation :set_winner_and_loser_or_draw
+  
+  def self.combinations(competitor_ids)
+    list, already_played_competitor_ids = [], {}
+    
+    competitor_ids.each do |competitor_id|
+      already_played_competitor_ids[competitor_id] ||= []
+      working_competitor_ids = competitor_ids.select{|id| id != competitor_id && !already_played_competitor_ids[competitor_id].include?(id)}.shuffle
+      
+      working_competitor_ids.each do |other_competitor_id|
+        already_played_competitor_ids[other_competitor_id] ||= []
+        already_played_competitor_ids[competitor_id] << other_competitor_id
+        already_played_competitor_ids[other_competitor_id] << competitor_id
+        list << [competitor_id, other_competitor_id]
+      end
+    end
+    
+    list.shuffle
+  end
+  
+  def self.winners_for_current_round(season)
+    round = nil
+    
+    competitor_ids = if season.tournament.with_second_leg?
+      ids = []
+      
+      season.matches.where(matchday: season.current_matchday - 2).order('created_at ASC').each do |first_match|
+        round = first_match.round + 1
+        second_match = season.matches.for_competitors(first_match.home_competitor_id, first_match.away_competitor_id).where(matchday: season.current_matchday - 1).first
+        ids << winner_of_two_matches([first_match, second_match])
+      end
+      
+      ids
+    else 
+      matches = season.matches.where(matchday: season.current_matchday - 1).order('created_at ASC').to_a
+      round = matches.first.round + 1
+      matches.map(&:winner_competitor_id)
+    end
+    
+    [competitor_ids, round]
+  end
+  
+  def self.direct_comparison(matches)
+    matches = matches.select{|m| m.winner_competitor_id.present? || m.draw == true }
+    
+    if matches.any?  
+      matches.length == 1 ? matches.first.winner_competitor_id : TournamentMatch.winner_of_two_matches(matches)
+    else
+      -1
+    end
+  end
   
   def self.winner_of_two_matches(matches)
     competitor_goals = matches[0].home_goals + matches[1].away_goals

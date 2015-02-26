@@ -70,22 +70,9 @@ class TournamentSeason < ActiveRecord::Base
     matchdays_count, first_leg_matchdays_count, primitive_matches = 0, 0, {}
     
     if tournament.is_round_robin?
-      already_played_competitor_ids, already_played_matchdays, combinations = {}, {}, []
-      
-      competitor_ids.each do |competitor_id|
-        already_played_competitor_ids[competitor_id] ||= []
-        already_played_matchdays[competitor_id] ||= {}
-        working_competitor_ids = competitors.map(&:id).select{|id| id != competitor_id && !already_played_competitor_ids[competitor_id].include?(id)}.shuffle
-        
-        working_competitor_ids.each do |other_competitor_id|
-          already_played_competitor_ids[other_competitor_id] ||= []
-          already_played_competitor_ids[competitor_id] << other_competitor_id
-          already_played_competitor_ids[other_competitor_id] << competitor_id
-          combinations << [competitor_id, other_competitor_id]
-        end
-      end
-      
-      combinations.shuffle!
+      already_played_matchdays = {}, {}
+      competitor_ids.each{|id| already_played_matchdays[id] ||= {} }
+      combinations = TournamentMatch.combinations(competitor_ids)
       first_leg_matchdays_count = competitors.length % 2 == 0 ? (competitors.length - 1) : competitors.length
   
       first_leg_matchdays_count.times do |matchday|
@@ -226,23 +213,7 @@ class TournamentSeason < ActiveRecord::Base
       working_rankings[match.away_competitor_id].consider_match(match)
     end
     
-    position = 1
-    
-    scope = rankings.where(matchday: matchday)
-    
-    if tournament.is_round_robin?
-      scope = scope.order('points DESC, goal_differential DESC, goals_scored DESC')
-    else
-      scope = scope.order('points DESC, matches DESC, goal_differential DESC, goals_scored DESC')
-    end
-    
-    scope.each do |ranking|
-      ranking.position = position
-      ranking.calculate_trend
-      ranking.save!
-      
-      position += 1
-    end
+    TournamentSeasonRanking.sort(self, matchday)
     
     matchday_played = if tournament.is_round_robin?
       rankings.where(matchday: matchday, played: false).none?
@@ -269,22 +240,7 @@ class TournamentSeason < ActiveRecord::Base
   
   def generate_matches_for_next_round
     primitive_matches = {}
-    round = nil
-    
-    competitor_ids = if tournament.with_second_leg?
-      ids = []
-      
-      matches.where(matchday: current_matchday - 2).order('created_at ASC').each do |first_match|
-        round = first_match.round + 1
-        second_match = matches.for_competitors(first_match.home_competitor_id, first_match.away_competitor_id).where(matchday: current_matchday - 1).first
-        ids << TournamentMatch.winner_of_two_matches([first_match, second_match])
-      end
-      
-      ids
-    else 
-      round = matches.where(matchday: current_matchday - 1).order('created_at ASC').first.round + 1
-      matches.where(matchday: current_matchday - 1).order('created_at ASC').map(&:winner_competitor_id)
-    end
+    competitor_ids, round = TournamentMatch.winners_for_current_round(self)
     
     begin
       match = matches.create!(
