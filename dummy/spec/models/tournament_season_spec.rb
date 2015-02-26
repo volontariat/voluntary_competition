@@ -81,12 +81,14 @@ describe TournamentSeason do
     let(:with_second_leg) { false }
     
     before :each do
-      @tournament = FactoryGirl.create(:tournament, system_type: system_type, competitors_limit: competitors_limit, with_second_leg: with_second_leg)
+      user = FactoryGirl.create(:user)
+      @tournament = FactoryGirl.create(
+        :tournament, system_type: system_type, competitors_limit: competitors_limit, with_second_leg: with_second_leg, user: user
+      )
       @season = @tournament.current_season
       @denied_competitor = FactoryGirl.create(:competitor, game_and_exercise_type: @tournament.game_and_exercise_type)
       FactoryGirl.create(:tournament_season_participation, season: @season, competitor: @denied_competitor).deny!
       @accepted_competitors = []
-      user = FactoryGirl.create(:user)
       
       competitors_limit.times do
         competitor = FactoryGirl.create(:competitor, game_and_exercise_type: @tournament.game_and_exercise_type, user: user)
