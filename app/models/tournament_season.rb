@@ -163,7 +163,7 @@ class TournamentSeason < ActiveRecord::Base
       end while competitors_left > 1
       
       matchdays_count = if tournament.with_second_leg?
-        # - 1 because the final is only one match
+        # - 1 because the final and third place playoff is only one match
         (matchdays_count * 2) - 1
       else
         matchdays_count
@@ -239,16 +239,21 @@ class TournamentSeason < ActiveRecord::Base
   end
   
   def generate_matches_for_next_round
-    primitive_matches = {}
-    competitor_ids, round = TournamentMatch.winners_for_current_round(self)
+    primitive_matches, round = {}, nil
     
-    begin
-      match = matches.create!(
-        round: round, matchday: current_matchday, home_competitor_id: competitor_ids.shift, away_competitor_id: competitor_ids.shift, date: Time.now
-      )
-      primitive_matches[current_matchday] ||= []
-      primitive_matches[current_matchday] << [match.home_competitor_id, match.away_competitor_id] 
-    end while competitor_ids.any?
+    (tournament.third_place_playoff? ? [true, false] : [true]).each do |is_winner|
+      next unless is_winner || (is_winner == false && current_matchday == matchdays)
+      
+      competitor_ids, round = TournamentMatch.losers_or_winners_of_current_round(self, is_winner)
+      
+      begin
+        match = matches.create!(
+          round: round, matchday: current_matchday, home_competitor_id: competitor_ids.shift, away_competitor_id: competitor_ids.shift, date: Time.now
+        )
+        primitive_matches[current_matchday] ||= []
+        primitive_matches[current_matchday] << [match.home_competitor_id, match.away_competitor_id] 
+      end while competitor_ids.any?
+    end
     
     generate_second_leg_matches(round, primitive_matches, 1) if tournament.with_second_leg? && current_matchday != matchdays
   end

@@ -39,11 +39,17 @@
 <% if @rounds >= round + 1 && round_matches_index % 2 == 0 %>  
   <td rowspan="2" style="border:0px solid #000000; border-bottom-width:2px;">&nbsp;</td>
 <% end %>
+<% if @third_place_playoff && @round_matches_index[1] == first_round_matches_index_for_last_match_of_round(@rounds - 2) %>
+  <%= render partial: 'competition/tournament_seasons/third_place_playoff', locals: { position: 'after_first_round_bracket_match_top' } %>
+<% end %>
 </tr>
 <tr>
   <td style="height:7px;"></td>
   <% multiplicator = @with_second_leg ? 4 : 2 %>
   <td colspan="<%= (round - 1) * multiplicator + ((round - 2) * 2) %>" rowspan="2"></td>
+<% if @third_place_playoff && @round_matches_index[1] == first_round_matches_index_for_last_match_of_round(@rounds - 2) %>
+  <%= render partial: 'competition/tournament_seasons/third_place_playoff', locals: { position: 'after_first_round_bracket_match_between' } %>
+<% end %>
 </tr>
 <tr>
   <td style="height:7px;"></td>
@@ -71,12 +77,17 @@
     <%= matches.first.away_goals + matches.second.home_goals %>
   <% else %>
     -
-  <% end %>    
+  <% end %>
   </td>
 <% end %>
+
 <% if @rounds >= round + 1 && round_matches_index % 2 == 0 %>   
   <td rowspan="<%= rowspan_for_round_connector(round) %>" style="border:2px solid #000000; border-left-width:0px;">&nbsp;</td>
 <% elsif @rounds >= round + 1 && round_matches_index % 2 != 0 %>
   <td rowspan="2" style="border:0px solid #000000; border-top-width:2px;">&nbsp;</td>
+<% end %>
+
+<% if @third_place_playoff && round == @rounds - 1 && @round_matches_index[1] == first_round_matches_index_for_last_match_of_round(round) %>
+  <%= render partial: 'competition/tournament_seasons/third_place_playoff', locals: { position: 'after_first_round_bracket_match_bottom_only_round_title' } %>
 <% end %>
 </tr>

@@ -73,4 +73,14 @@ describe TournamentSeasonsHelper do
       expect(helper.match_for_round_after_first_one?(4, 2)).to be_truthy
     end
   end
+  
+  describe '#first_round_matches_index_for_last_match_of_round' do
+    it 'does what the name says' do
+      assign :matches, {
+        1 => { 1 => 4.times.to_a.map{|t| FactoryGirl.build(:tournament_match) } }
+      }
+      
+      expect(helper.first_round_matches_index_for_last_match_of_round(2)).to be == 2
+    end
+  end
 end

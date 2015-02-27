@@ -53,6 +53,16 @@ describe Tournament do
     end
   end
   
+  describe 'callbacks' do
+    describe 'before_validation' do
+      describe '#reset_third_place_playoff_if_round_robin' do
+        it 'does what the name says' do
+          
+        end
+      end
+    end
+  end
+  
   describe '#is_round_robin?' do
     it 'tells if the tournament is round robin' do
       tournament = FactoryGirl.build(:tournament)

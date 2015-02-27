@@ -51,4 +51,15 @@ module TournamentSeasonsHelper
   
     return false
   end
+  
+  def first_round_matches_index_for_last_match_of_round(round)
+    first_round_matches_index, index = 0, 0
+    
+    begin
+      first_round_matches_index = index if match_for_round_after_first_one?(index, round)
+      index += 1
+    end while index < @matches[1][1].length
+    
+    first_round_matches_index
+  end
 end

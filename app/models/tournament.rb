@@ -17,10 +17,11 @@ class Tournament < ActiveRecord::Base
   validates :name, presence: true, uniqueness: { case_sensitive: false, scope: [:user_id, :game_and_exercise_type_id] }
   validates :competitors_limit, presence: true
   
-  attr_accessible :system_type, :with_second_leg, :name, :first_season_name, :competitors_limit
+  attr_accessible :system_type, :name, :with_second_leg, :third_place_playoff, :first_season_name, :competitors_limit
   
   attr_accessor :first_season_name
   
+  before_validation :reset_third_place_playoff_if_round_robin
   after_create :create_first_season
   
   def is_round_robin?
@@ -32,6 +33,10 @@ class Tournament < ActiveRecord::Base
   end
     
   private
+  
+  def reset_third_place_playoff_if_round_robin
+    self.third_place_playoff = false if is_round_robin? && third_place_playoff
+  end
   
   def system_type_requirements
     case system_type

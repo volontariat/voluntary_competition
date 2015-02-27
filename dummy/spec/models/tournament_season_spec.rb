@@ -267,9 +267,12 @@ describe TournamentSeason do
   
   describe '#generate_matches_for_next_round' do
     let(:with_second_leg) { false }
+    let(:third_place_playoff) { false }
     
     before :each do
-      @tournament = FactoryGirl.create(:tournament, system_type: 1, competitors_limit: 4, with_second_leg: with_second_leg)
+      @tournament = FactoryGirl.create(
+        :tournament, system_type: 1, competitors_limit: 4, with_second_leg: with_second_leg, third_place_playoff: third_place_playoff
+      )
       @season = @tournament.current_season
       competitors = []
       user = FactoryGirl.create(:user)
@@ -292,8 +295,18 @@ describe TournamentSeason do
     end
     
     context 'without second leg' do
-      it 'generates 1 match for each winner of last round' do
-        expect_season_fixtures 'seasons/single_elimination/even_competitors/without_second_leg/whole_season_for_4.txt'
+      context 'with third place playoff' do
+        let(:third_place_playoff) { true }
+        
+        it 'generates 1 match for each winner of last round and 1 match for each loser of last round' do
+          expect_season_fixtures 'seasons/single_elimination/even_competitors/without_second_leg/third_place_playoff/whole_season_for_4.txt'
+        end
+      end
+      
+      context 'without third place playoff' do
+        it 'generates 1 match for each winner of last round' do
+          expect_season_fixtures 'seasons/single_elimination/even_competitors/without_second_leg/whole_season_for_4.txt'
+        end
       end
     end
 

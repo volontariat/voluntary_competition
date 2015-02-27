@@ -23,6 +23,7 @@ en:
         quarter_final: Quarter-finals
         semi_final: Semi-finals
         third_place_play_off: Third place play-off
+        third_place: Third place
         final: Final
                 
   activerecord:

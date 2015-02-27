@@ -3,11 +3,17 @@
   
   <div class="form-inputs">
     <%= render partial: 'shared/game_and_exercise_type_association', locals: { f: f } %>
-    <%= f.input :system_type, as: :radio_buttons, collection: Tournament::SYSTEM_TYPES.each_with_index.map { |x,i| [x.titleize, i] } %>
+    <%= f.input :system_type, as: :radio_buttons, collection: Tournament::SYSTEM_TYPES.each_with_index.map { |x,i| [x.titleize, i] } if f.object.new_record? %>
     <%= f.input :name %>
+    
+    <% if f.object.new_record? %>
     <%= f.input :competitors_limit %>
     <%= f.input :with_second_leg %>
+    <div id="tournament_third_place_playoff_wrapper" style="display: <%= @tournament.is_round_robin? ? 'none' : 'block' %>;">
+      <%= f.input :third_place_playoff %>
+    </div>
     <%= f.input :first_season_name %>
+    <% end %>
   </div>
   
   <div class="form-actions">

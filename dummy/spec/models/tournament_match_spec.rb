@@ -333,4 +333,13 @@ describe TournamentMatch do
       end
     end
   end
+  
+  describe '#other_competitor_id' do
+    it 'returns id of other match competitor than the given one' do
+      match = FactoryGirl.build(:tournament_match, home_competitor_id: 1, away_competitor_id: 2)
+      
+      expect(match.other_competitor_id(1)).to be == 2
+      expect(match.other_competitor_id(2)).to be == 1
+    end
+  end
 end

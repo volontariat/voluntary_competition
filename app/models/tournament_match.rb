@@ -51,6 +51,14 @@ class TournamentMatch < ActiveRecord::Base
   end
   
   def self.winners_for_current_round(season)
+    losers_or_winners_of_current_round(season, true)
+  end
+  
+  def self.losers_of_current_round(season)
+    losers_or_winners_of_current_round(season, false)
+  end
+  
+  def self.losers_or_winners_of_current_round(season, is_winner)
     round = nil
     
     competitor_ids = if season.tournament.with_second_leg?
@@ -59,14 +67,16 @@ class TournamentMatch < ActiveRecord::Base
       season.matches.where(matchday: season.current_matchday - 2).order('created_at ASC').each do |first_match|
         round = first_match.round + 1
         second_match = season.matches.for_competitors(first_match.home_competitor_id, first_match.away_competitor_id).where(matchday: season.current_matchday - 1).first
-        ids << winner_of_two_matches([first_match, second_match])
+        winner = winner_of_two_matches([first_match, second_match])
+        competitor_id = is_winner ? winner : first_match.other_competitor_id(winner)
+        ids << competitor_id
       end
       
       ids
     else 
       matches = season.matches.where(matchday: season.current_matchday - 1).order('created_at ASC').to_a
       round = matches.first.round + 1
-      matches.map(&:winner_competitor_id)
+      is_winner ? matches.map(&:winner_competitor_id) : matches.map(&:loser_competitor_id)
     end
     
     [competitor_ids, round]
@@ -115,6 +125,10 @@ class TournamentMatch < ActiveRecord::Base
     else
       [away_goals, home_goals]
     end
+  end
+  
+  def other_competitor_id(competitor_id)
+    home_competitor_id == competitor_id ? away_competitor_id : home_competitor_id
   end
   
   private

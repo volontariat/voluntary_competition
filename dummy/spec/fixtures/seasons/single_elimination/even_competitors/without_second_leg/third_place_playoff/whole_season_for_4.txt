@@ -1,0 +1,50 @@
+[
+  {
+    results: [
+      { 
+        @first_matchday_matches[0].id.to_s => { 'home_goals' => '2', 'away_goals' => '0' },
+        @first_matchday_matches[1].id.to_s => { 'home_goals' => '0', 'away_goals' => '1' }  
+      }, 
+      1
+    ],
+    current_matchday_after_results: 2,
+    number_of_matches_for_current_matchday: 2,
+  },
+  {
+    reload_fixture: true,
+    results: [
+      { 
+        @matches[0].id.to_s => { 'home_goals' => '0', 'away_goals' => '1' },
+        @matches[1].try(:id).to_s => { 'home_goals' => '1', 'away_goals' => '0' },
+      }, 
+      2
+    ],
+    current_matchday_after_results: 2,
+    rankings: {
+      @first_matchday_matches[1].away_competitor_id => { 
+        2 => {
+          played: true, matches: 2, position: 1, points: 6, wins: 2, draws: 0, losses: 0, goal_differential: 2,
+          goals_scored: 2, goals_allowed: 0
+        }
+      },
+      @first_matchday_matches[0].home_competitor_id => { 
+        2 => {
+          played: true, matches: 2, position: 2, points: 3, wins: 1, draws: 0, losses: 1, goal_differential: 1,
+          goals_scored: 2, goals_allowed: 1
+        }
+      },
+      @first_matchday_matches[0].away_competitor_id => { 
+        2 => {
+          played: true, matches: 2, position: 3, points: 3, wins: 1, draws: 0, losses: 1, goal_differential: -1,
+          goals_scored: 1, goals_allowed: 2
+        }
+      },
+      @first_matchday_matches[1].home_competitor_id => { 
+        2 => {
+          played: true, matches: 2, position: 4, points: 0, wins: 0, draws: 0, losses: 2, goal_differential: -2,
+          goals_scored: 0, goals_allowed: 2
+        }
+      }
+    }
+  }
+]

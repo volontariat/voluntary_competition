@@ -64,6 +64,10 @@
         <% end %>
       <% end %>
       
+      <% if @third_place_playoff && @rounds <= 3 && @round_matches_index[1] == @matches[1][1].length - 1 %>
+      <%= render partial: 'competition/tournament_seasons/third_place_playoff', locals: { position: 'bracket' } %>
+      <% end %>
+      
       <% @round_matches_index[1] += 1 %>
     <% end %>
     </tbody>
