@@ -70,7 +70,7 @@ describe VoluntaryCompetition::Sorter do
     
       tied_competitor_positions = { 5 => [], 7 => []}
       
-      5.times do
+      50.times do
         new_rankings = ::VoluntaryCompetition::Sorter.new(rankings.clone, direct_comparisons).sort
         
         tied_competitor_positions.keys.each do |competitor_id|
