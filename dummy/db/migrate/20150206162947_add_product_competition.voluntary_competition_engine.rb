@@ -44,6 +44,8 @@ class AddProductCompetition < ActiveRecord::Migration
       t.string :name
       t.integer :competitors_limit, limit: 2
       t.boolean :with_second_leg, default: false
+      t.boolean :with_group_stage, default: false
+      t.integer :groups_count, limit: 2
       t.boolean :third_place_playoff, default: false
       t.integer :current_season_id
       t.integer :matchdays_per_season, limit: 2
@@ -76,6 +78,7 @@ class AddProductCompetition < ActiveRecord::Migration
 
     create_table :tournament_season_rankings do |t|
       t.integer :season_id
+      t.integer :group_number, limit: 2
       t.integer :matchday, limit: 2
       t.integer :matches, default: 0, limit: 2
       t.boolean :played, default: false
@@ -93,10 +96,11 @@ class AddProductCompetition < ActiveRecord::Migration
       t.timestamps
     end
     
-    add_index :tournament_season_rankings, [:season_id, :matchday, :position, :competitor_id], unique: true, name: 'uniq_tournament_ranking'
+    add_index :tournament_season_rankings, [:season_id, :group_number, :matchday, :position, :competitor_id], unique: true, name: 'uniq_tournament_season_ranking'
 
     create_table :tournament_matches do |t|
       t.integer :season_id
+      t.integer :group_number, limit: 2
       t.integer :round, limit: 2
       t.integer :matchday, limit: 2
       t.integer :home_competitor_id
@@ -111,7 +115,7 @@ class AddProductCompetition < ActiveRecord::Migration
       t.timestamps
     end
     
-    add_index :tournament_matches, [:season_id, :matchday]
+    add_index :tournament_matches, [:season_id, :group_number, :matchday]   
   end
   
   def down
@@ -125,6 +129,7 @@ class AddProductCompetition < ActiveRecord::Migration
     drop_table :tournament_seasons
     drop_table :tournament_season_participations
     drop_table :tournament_season_rankings
+    drop_table :tournament_season_group_rankings
     drop_table :tournament_matches
   end
 end

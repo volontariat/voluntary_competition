@@ -1,4 +1,4 @@
-<% if params[:from_bracket] %>
+<% if params[:from_bracket] == 'true' %>
   <% if @input_matches.empty? %>
     alert("<%= t('tournament_matches.updates.no_results') %>");
     $('#bracket_matches_spinner').hide();

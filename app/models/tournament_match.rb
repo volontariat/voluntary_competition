@@ -19,6 +19,8 @@ class TournamentMatch < ActiveRecord::Base
   
   scope :rated, -> { where('winner_competitor_id IS NOT NULL OR draw IS NOT NULL') }
   
+  scope :for_elimination_stage, ->(tournament) { where('matchday > ?', tournament.last_matchday_of_group_stage) }
+  
   validates :season_id, presence: true
   validates :home_competitor_id, presence: true
   validates :away_competitor_id, presence: true
@@ -28,7 +30,7 @@ class TournamentMatch < ActiveRecord::Base
   validate :results_for_current_matchday, if: 'home_goals.present? && away_goals.present?'
   validate :result_of_both_round_matches_is_not_a_draw, if: 'home_goals.present? && away_goals.present? && season.tournament.is_single_elimination? && season.tournament.with_second_leg?'
   
-  attr_accessible :season_id, :round, :matchday, :home_competitor_id, :away_competitor_id, :home_goals, :away_goals, :date
+  attr_accessible :season_id, :group_number, :round, :matchday, :home_competitor_id, :away_competitor_id, :home_goals, :away_goals, :date
 
   before_validation :set_winner_and_loser_or_draw
   

@@ -24,18 +24,40 @@ end
 def compare_rankings(expected_rankings)
   expected_rankings.each do |competitor_id, matchdays|
     matchdays.each do |matchday, ranking_attributes|
-      ranking = @season.rankings.where(matchday: matchday, competitor_id: competitor_id).first
+      ranking_attributes = { global: ranking_attributes } unless ranking_attributes.has_key?(:group)
       
-      ranking_attributes.each do |attribute, value|
-        message = "#{@hash[competitor_id]}.#{attribute} on day #{matchday} got #{ranking.send(attribute).inspect} but expected #{value.inspect}"
+      ranking_attributes.each do |scope, attributes|
+        rankings = @season.rankings.where(matchday: matchday, competitor_id: competitor_id)
+        rankings = rankings.where(group_number: attributes[:group_number]) if scope == :group
+        ranking = rankings.first
         
-        if value.is_a? Array
-          expect(value.include?(ranking.send(attribute))).to be_truthy, message
-        else
-          expect(ranking.send(attribute)).to be == value, message
+        attributes.each do |attribute, value|
+          group_message = scope == :group ? " of group ##{attributes[:group_number]}" : ''
+          message = if attribute.to_s == 'position'
+            "#{@hash[competitor_id]}.#{attribute} on day #{matchday}#{group_message} got #{ranking.send(attribute).inspect} " +
+            "but expected #{value.inspect}: #{primitive_rankings(ranking.group_number, matchday)}"
+          else
+            "#{@hash[competitor_id]}.#{attribute} on day #{matchday}#{group_message} got #{ranking.send(attribute).inspect} " +
+            "but expected #{value.inspect}"
+          end
+          
+          if value.is_a? Array
+            expect(value.include?(ranking.send(attribute))).to be_truthy, message
+          else
+            expect(ranking.send(attribute)).to be == value, message
+          end
         end
       end
     end
+  end
+end
+
+def primitive_rankings(group_number, matchday)
+  @season.rankings.where(group_number: group_number, matchday: matchday).order('position ASC').map do |ranking|
+    attributes = ranking.attributes
+    attributes['competitor_id'] = @hash[ranking.competitor_id]
+    [:id, :created_at, :updated_at].each {|attribute| attributes.delete attribute.to_s }
+    attributes
   end
 end
 
@@ -78,12 +100,16 @@ describe TournamentSeason do
   describe '#generate_matches' do
     let(:system_type) { 0 }
     let(:competitors_limit) { 4 }
+    let(:with_group_stage) { false }
+    let(:groups_count) { nil }
     let(:with_second_leg) { false }
     
     before :each do
       user = FactoryGirl.create(:user)
       @tournament = FactoryGirl.create(
-        :tournament, system_type: system_type, competitors_limit: competitors_limit, with_second_leg: with_second_leg, user: user
+        :tournament, 
+        system_type: system_type, competitors_limit: competitors_limit, with_group_stage: with_group_stage, 
+        groups_count: groups_count, with_second_leg: with_second_leg, user: user
       )
       @season = @tournament.current_season
       @denied_competitor = FactoryGirl.create(:competitor, game_and_exercise_type: @tournament.game_and_exercise_type)
@@ -149,16 +175,38 @@ describe TournamentSeason do
       let(:system_type) { 1 }
       
       context 'without second leg' do
-        it 'generates 1 first round match for each competitor' do
-          expect(@season.matches.where('home_competitor_id = :id OR away_competitor_id = :id', id: @denied_competitor.id).count).to be == 0
-          
-          @accepted_competitors.each do |competitor|
-            matches = @season.matches.where('home_competitor_id = :id OR away_competitor_id = :id', id: competitor.id).order('matchday ASC').to_a
-            expect(matches.map(&:matchday)).to be == [1]
-            #expect([[true, false, true, false, true, false], [false, true, false, true, false, true]].include?(matches.map{|m| m.home_competitor_id == competitor.id })).to be_truthy
+        context 'without group stage' do
+          it 'generates 1 first round match for each competitor' do
+            expect(@season.matches.where('home_competitor_id = :id OR away_competitor_id = :id', id: @denied_competitor.id).count).to be == 0
+            
+            @accepted_competitors.each do |competitor|
+              matches = @season.matches.where('home_competitor_id = :id OR away_competitor_id = :id', id: competitor.id).order('matchday ASC').to_a
+              expect(matches.map(&:matchday)).to be == [1]
+              #expect([[true, false, true, false, true, false], [false, true, false, true, false, true]].include?(matches.map{|m| m.home_competitor_id == competitor.id })).to be_truthy
+            end
+            
+            expect(@season.matchdays).to be == 2
           end
+        end
+        
+        context 'with group stage' do
+          let(:competitors_limit) { 6 }
+          let(:with_group_stage) { true }
+          let(:groups_count) { 2 }
           
-          expect(@season.matchdays).to be == 2
+          it 'generates all possible matches between the accepted competitors of a group' do
+            @accepted_competitors.each do |competitor|
+              matches = @season.matches.where('home_competitor_id = :id OR away_competitor_id = :id', id: competitor.id).order('matchday ASC').to_a
+              expect([[1, 3], [1, 2], [2, 3]].include?(matches.map(&:matchday))).to be_truthy, "Not expected that [[1, 3], [1, 2], [2, 3]] does not include #{matches.map(&:matchday)}"
+              expect([[true, false], [false, true]].include?(matches.map{|m| m.home_competitor_id == competitor.id })).to be_truthy
+            end
+            
+            expect(@season.matches.order('group_number DESC').first.group_number).to be == 2
+            
+            # 1-2,1-3,2-3
+            [1, 2].each {|group_number| expect(@season.matches.where(group_number: group_number).count).to be == 3 }
+            expect(@season.matchdays).to be == 5
+          end
         end
       end
       
@@ -183,10 +231,16 @@ describe TournamentSeason do
   describe '#consider_matches' do
     let(:system_type) { 0 }
     let(:competitors_limit) { 4 }
+    let(:with_group_stage) { false }
+    let(:groups_count) { nil }
     let(:with_second_leg) { false }
     
     before :each do
-      @tournament = FactoryGirl.create(:tournament, system_type: system_type, competitors_limit: competitors_limit, with_second_leg: with_second_leg)
+      @tournament = FactoryGirl.create(
+        :tournament, 
+        system_type: system_type, competitors_limit: competitors_limit, with_second_leg: with_second_leg, with_group_stage: with_group_stage,
+        groups_count: groups_count
+      )
       @season = @tournament.current_season
       user = FactoryGirl.create(:user)
       
@@ -256,11 +310,65 @@ describe TournamentSeason do
     
     context 'tournament is single elimination' do
       let(:system_type) { 1 }
-      let(:competitors_limit) { 8 }
-      let(:with_second_leg) { true }
       
-      it 'ranks by points DESC, matches DESC, goal_differential DESC, goals_scored DESC' do
-        expect_season_fixtures 'seasons/single_elimination/even_competitors/with_second_leg/whole_season_for_8.txt'
+      context 'with second leg' do
+        let(:competitors_limit) { 8 }
+        let(:with_second_leg) { true }
+        
+        it 'ranks by points DESC, matches DESC, goal_differential DESC, goals_scored DESC' do
+          expect_season_fixtures 'seasons/single_elimination/even_competitors/with_second_leg/whole_season_for_8.txt'
+        end
+      end
+      
+      def expect_season_fixtures_by_comparison(fixture_path)
+        fixtures = load_ruby_fixture fixture_path
+        
+        @season.tournament.last_matchday_of_group_stage.times do |matchday|
+          matchday += 1
+          results = {}
+          
+          @season.matches.where(matchday: matchday).each do |match|
+            results[match.id.to_s] = {
+              'home_goals' => fixtures[match.home_competitor_id][:comparisons][match.away_competitor_id],
+              'away_goals' => fixtures[match.away_competitor_id][:comparisons][match.home_competitor_id]
+            }
+          end
+          
+          @season.consider_matches(results, matchday)
+        end
+        
+        rankings = {}
+        
+        fixtures.each {|competitor_id, hash| rankings[competitor_id] = hash[:rankings]}
+        
+        compare_rankings(rankings)
+      end
+      
+      context 'without second leg' do
+        context 'with group stage' do
+          let(:competitors_limit) { 6 }
+          let(:with_group_stage) { true }
+          let(:groups_count) { 2 }
+          
+          it 'creates one ranking for for whole tournament, one ranking for each group and generates matches for first round of elimination stage on last group matchday' do
+            @competitors = {
+              1 => @season.matches.where(group_number: 1).map{|m| [m.home_competitor_id, m.away_competitor_id] }.flatten.uniq,
+              2 => @season.matches.where(group_number: 2).map{|m| [m.home_competitor_id, m.away_competitor_id] }.flatten.uniq
+            }
+            @hash = {}
+            
+            @competitors.each do |group_number, competitor_ids|
+              competitor_ids.each_with_index {|competitor_id, index| @hash[competitor_id] = "#{group_number}.#{index}" }
+            end
+            
+            #puts "hash:#{@hash}"
+            
+            expect_season_fixtures_by_comparison 'seasons/single_elimination/even_competitors/without_second_leg/with_group_stage/season_until_last_group_matchday.txt'
+         
+            expect(@season.current_matchday).to be == 4
+            expect(@season.matches.where(matchday: 4).count).to be == 2
+          end
+        end
       end
     end
   end

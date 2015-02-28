@@ -1,0 +1,80 @@
+{
+  @competitors[1][0] => {
+    comparisons: { @competitors[1][1] => '2', @competitors[1][2] => '3' },
+    rankings: {
+      3 => {
+        group: {
+          group_number: 1, played: true, matches: 2, position: 1, points: 6, wins: 2, draws: 0, losses: 0, goal_differential: 4, goals_scored: 5, goals_allowed: 1 
+        },
+        global: {
+          played: true, matches: 2, position: 1, points: 6, wins: 2, draws: 0, losses: 0, goal_differential: 4, goals_scored: 5, goals_allowed: 1 
+        }
+      }
+    }
+  },
+  @competitors[1][1] => { 
+    comparisons: { @competitors[1][0] => '1', @competitors[1][2] => '1' },
+    rankings: {
+      3 => {
+        group: {
+          group_number: 1, played: true, matches: 2, position: 2, points: 1, wins: 0, draws: 1, losses: 1, goal_differential: -1, goals_scored: 2, goals_allowed: 3 
+        },
+        global: {
+          played: true, matches: 2, position: 3, points: 1, wins: 0, draws: 1, losses: 1, goal_differential: -1, goals_scored: 2, goals_allowed: 3 
+        }
+      }
+    }
+  },
+  @competitors[1][2] => { 
+    comparisons: { @competitors[1][0] => '0', @competitors[1][1] => '1' },
+    rankings: {
+      3 => {
+        group: {
+          group_number: 1, played: true, matches: 2, position: 3, points: 1, wins: 0, draws: 1, losses: 1, goal_differential: -3, goals_scored: 1, goals_allowed: 4 
+        },
+        global: {
+          played: true, matches: 2, position: 6, points: 1, wins: 0, draws: 1, losses: 1, goal_differential: -3, goals_scored: 1, goals_allowed: 4 
+        }
+      }
+    }
+  },
+  @competitors[2][0] => {
+    comparisons: { @competitors[2][1] => '1', @competitors[2][2] => '2' },
+    rankings: {
+      3 => {
+        group: {
+          group_number: 2, played: true, matches: 2, position: 1, points: 6, wins: 2, draws: 0, losses: 0, goal_differential: 3, goals_scored: 3, goals_allowed: 0 
+        },
+        global: {
+          played: true, matches: 2, position: 2, points: 6, wins: 2, draws: 0, losses: 0, goal_differential: 3, goals_scored: 3, goals_allowed: 0 
+        }
+      }
+    }
+  },
+  @competitors[2][1] => { 
+    comparisons: { @competitors[2][0] => '0', @competitors[2][2] => '1' },
+    rankings: {
+      3 => {
+        group: {
+          group_number: 2, played: true, matches: 2, position: 2, points: 1, wins: 0, draws: 1, losses: 1, goal_differential: -1, goals_scored: 1, goals_allowed: 2 
+        },
+        global: {
+          played: true, matches: 2, position: 4, points: 1, wins: 0, draws: 1, losses: 1, goal_differential: -1, goals_scored: 1, goals_allowed: 2
+        }
+      }
+    }
+  },
+  @competitors[2][2] => { 
+    comparisons: { @competitors[2][0] => '0', @competitors[2][1] => '1' },
+    rankings: {
+      3 => {
+        group: {
+          group_number: 2, played: true, matches: 2, position: 3, points: 1, wins: 0, draws: 1, losses: 1, goal_differential: -2, goals_scored: 1, goals_allowed: 3 
+        },
+        global: {
+          played: true, matches: 2, position: 5, points: 1, wins: 0, draws: 1, losses: 1, goal_differential: -2, goals_scored: 1, goals_allowed: 3 
+        }
+      }
+    }
+  }
+}

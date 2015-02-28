@@ -8,8 +8,7 @@ module Competition
       @third_place_playoff = @season.tournament.third_place_playoff?
       @round_matches_index = {}
       @rounds.times {|round| @round_matches_index[round + 1] = 0 }
-      @matches = @season.matches.order('round ASC, matchday ASC, created_at ASC').includes(:home_competitor, :away_competitor).group_by(&:round)
-      @matches.each {|round, matches| @matches[round] = matches.group_by(&:matchday) }
+      @matches = @season.elimination_stage_matches
     end
   end
 end

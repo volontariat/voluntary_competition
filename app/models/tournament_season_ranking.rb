@@ -7,43 +7,67 @@ class TournamentSeasonRanking < ActiveRecord::Base
   validates :season_id, presence: true
   validates :matchday, presence: true
   validates :position, presence: true
-  validates :competitor_id, presence: true, uniqueness: { scope: [:season_id, :matchday, :position] }
+  validates :competitor_id, presence: true, uniqueness: { scope: [:season_id, :group_number, :matchday, :position] }
   
-  attr_accessible :season_id, :matchday, :played, :matches, :position, :previous_position, :trend, :competitor_id
+  attr_accessible :season_id, :group_number, :matchday, :played, :matches, :position, :previous_position, :trend, :competitor_id
   attr_accessible :points, :wins, :draws, :losses, :goals_scored, :goals_allowed
   
   before_save :set_goal_differential
   
   def self.create_by_season(season)
-    position = 1
+    position, group_positions = 1, {}
     
     season.competitors.each do |competitor|
-      played = season.matches.for_competitor(competitor.id).where(matchday: 1).any? ? false : true
+      match = season.matches.for_competitor(competitor.id).where(matchday: 1).first
+      played = match.present? ? false : true
+      
+      group_number = if match.present?
+        match.group_number
+      elsif season.tournament.with_group_stage?
+        season.matches.for_competitor(competitor.id).where('group_number IS NOT NULL').first.group_number
+      end
+      
       season.rankings.create!(matchday: 1, played: played, position: position, previous_position: position, competitor_id: competitor.id)
+      
+      if season.tournament.with_group_stage?
+        group_positions[group_number] ||= 1
+        season.rankings.create!(
+          matchday: 1, group_number: group_number, played: played, position: group_positions[group_number], 
+          previous_position: group_positions[group_number], competitor_id: competitor.id
+        )
+        group_positions[group_number] += 1
+      end
+      
       position += 1
     end
   end
   
   def self.create_by_competitor(competitor_id, matchday, season)
-    ranking = season.rankings.where(matchday: matchday - 1, competitor_id: competitor_id).first
-    played = if season.tournament.is_round_robin? 
+    played = if season.tournament.is_round_robin? || (season.tournament.with_group_stage? && matchday <= season.tournament.last_matchday_of_group_stage)
       season.matches.for_competitor(competitor_id).where(matchday: matchday).any? ? false : true
     elsif season.tournament.is_single_elimination?
       false
     end
     
-    season.rankings.create!(
-      matchday: matchday, played: played, matches: ranking.matches, position: ranking.position, previous_position: ranking.position,
-      trend: ranking.trend, competitor_id: competitor_id, points: ranking.points, wins: ranking.wins,
-      draws: ranking.draws, losses: ranking.losses,
-      goals_scored: ranking.goals_scored, goals_allowed: ranking.goals_allowed
-    )
+    2.times do |time|
+      rankings = season.rankings.where(matchday: matchday - 1, competitor_id: competitor_id)
+      rankings = time == 0 ? rankings.where('group_number IS NULL') : rankings.where('group_number IS NOT NULL')
+      
+      break unless time == 0 || (time == 1 && season.tournament.with_group_stage? && matchday <= season.tournament.last_matchday_of_group_stage)
+        
+      ranking = rankings.first
+      season.rankings.create!(
+        group_number: time == 0 ? nil : ranking.group_number, matchday: matchday, played: played, matches: ranking.matches, position: ranking.position, 
+        previous_position: ranking.position, trend: ranking.trend, competitor_id: competitor_id, points: ranking.points, wins: ranking.wins,
+        draws: ranking.draws, losses: ranking.losses, goals_scored: ranking.goals_scored, goals_allowed: ranking.goals_allowed
+      )
+    end
   end
   
-  def self.sort(season, matchday)
-    working_rankings = season.rankings.where(matchday: matchday)
+  def self.sort(season, matchday, group_number = nil)
+    working_rankings = season.rankings.where(matchday: matchday, group_number: group_number)
     
-    if season.tournament.is_round_robin?
+    if season.tournament.is_round_robin? || (!group_number.nil? && season.tournament.with_group_stage? && matchday <= season.tournament.last_matchday_of_group_stage)
       working_rankings = working_rankings.order('points DESC, goal_differential DESC, goals_scored DESC').to_a
     else
       working_rankings = working_rankings.order('points DESC, matches DESC, goal_differential DESC, goals_scored DESC').to_a
@@ -54,7 +78,7 @@ class TournamentSeasonRanking < ActiveRecord::Base
     working_rankings.each do |r1|
       tie_key = ''
       
-      is_tie = if season.tournament.is_round_robin?
+      is_tie = if season.tournament.is_round_robin? || (!group_number.nil? && season.tournament.with_group_stage? && matchday <= season.tournament.last_matchday_of_group_stage)
         tie_key = "#{r1.points},#{r1.goal_differential},#{r1.goals_scored}"
         working_rankings.select do |r2| 
           r2.id != r1.id && r2.points == r1.points && r2.goal_differential == r1.goal_differential && r2.goals_scored == r1.goals_scored

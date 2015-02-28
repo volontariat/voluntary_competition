@@ -1,4 +1,5 @@
-<% if @rankings.none? %>
+<% rankings ||= @rankings %>
+<% if rankings.none? %>
 <p><%= I18n.t('tournament_season_rankings.index.empty_collection')%></p>
 <% else %>
   <table class="table table-striped" style="width:650px">
@@ -17,7 +18,7 @@
       </tr>
     </thead>
     <tbody>
-    <% @rankings.each do |ranking| %>
+    <% rankings.each do |ranking| %>
       <tr class="<%= cycle('odd', 'even') %>">
         <td style="text-align:right"><%= ranking.position %></td>
         <td style="text-align:center">

@@ -1,0 +1,16 @@
+<div class="tabs">
+  <ul>
+    <li><a href="#global"><%= t('activerecord.models.tournament') %></a></li>
+<% @rankings.keys.select{|k| k != :global }.sort.each do |group_number| %>
+    <li><a href="#group_<%= group_number %>"><%= t('general.group') %> <%= group_number %></a></li>
+<% end %>
+  </ul>
+  <div id="global">
+    <%= render partial: 'competition/rankings/collection', locals: { rankings: @rankings[:global] } %>
+  </div>
+<% @rankings.keys.select{|k| k != :global }.sort.each do |group_number| %>
+  <div id="group_<%= group_number %>">
+    <%= render partial: 'competition/rankings/collection', locals: { rankings: @rankings[group_number] } %>
+  </div>
+<% end %>    
+</div>

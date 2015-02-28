@@ -106,14 +106,14 @@ describe TournamentMatch do
         
         it 'denies result for second leg match if result of both matches is a draw' do
           matches = @season.matches.where(matchday: 1).order('created_at ASC').to_a
-          @season.consider_matches(
+          output = @season.consider_matches(
             { 
               matches[0].id.to_s => { 'home_goals' => '1', 'away_goals' => '0' },
               matches[1].id.to_s => { 'home_goals' => '2', 'away_goals' => '0' }  
             }, 
             1
           )
-          
+          @season.reload
           match = @season.matches.for_competitors(matches[0].home_competitor_id, matches[0].away_competitor_id).where(matchday: 2).order('created_at ASC').first
           match.home_goals = 1
           match.away_goals = 0
@@ -128,7 +128,7 @@ describe TournamentMatch do
           
           match.valid?
           
-          expect(match.errors[:base].empty?).to be_truthy
+          expect(match.errors[:base].empty?).to be_truthy, "Not expected that there are any base errors: #{match.errors[:base]}"
         end
       end
       

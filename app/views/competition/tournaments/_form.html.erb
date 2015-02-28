@@ -9,6 +9,12 @@
     <% if f.object.new_record? %>
     <%= f.input :competitors_limit %>
     <%= f.input :with_second_leg %>
+    <div id="tournament_with_group_stage_wrapper" style="display: <%= @tournament.is_round_robin? ? 'none' : 'block' %>;">
+      <%= f.input :with_group_stage %>
+    </div>
+    <div id="tournament_groups_count_wrapper" style="display: <%= @tournament.is_round_robin? ? 'none' : 'block' %>;">
+      <%= f.input :groups_count %>
+    </div>
     <div id="tournament_third_place_playoff_wrapper" style="display: <%= @tournament.is_round_robin? ? 'none' : 'block' %>;">
       <%= f.input :third_place_playoff %>
     </div>

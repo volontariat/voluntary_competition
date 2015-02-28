@@ -25,3 +25,6 @@ en:
             system_type:
               competitors_limit_must_be_power_of_two: Competitors limit must be a power of two!
               competitors_limit_should_be_at_least_4: Competitors limit should be at least 4!
+              at_least_6_competitors_with_group_stage: Competitors limit should be at least 6!
+              groups_count_invalid: Result of modulo check between competitors limit and groups count should be 0!
+              groups_with_at_least_3_competitors: Groups should have at least 3 competitors, please change the groups count or competitors limit!
