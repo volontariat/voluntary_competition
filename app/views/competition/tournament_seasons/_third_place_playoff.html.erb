@@ -1,15 +1,15 @@
-<% match = @matches.has_key?(@rounds) ? @matches[@rounds][@season.matchdays][1] : nil %>
+<% match = @matches.has_key?(@winner_rounds) ? @matches[@winner_rounds][@season.matchdays][1] : nil %>
 <% case position %>
 <% when 'first_round_bracket_row' %>
   <% multiplicator = @with_second_leg ? 6 : 4 %>
-  <% if @rounds == 2 && @round_matches_index[1] == @matches[1][1].length - 1 && side == :away %>
-<td colspan="<%= (@rounds - 2) * multiplicator + 1 %>">&nbsp;</td>
+  <% if @winner_rounds == 2 && @round_matches_index[1] == @matches[1][1].length - 1 && side == :away %>
+<td colspan="<%= (@winner_rounds - 2) * multiplicator + 1 %>">&nbsp;</td>
 <td colspan="2" style="border:1px solid #AAAAAA; background:#F2F2F2; text-align:center; padding-left:1em;">
   <%= t('tournament_seasons.general.rounds.third_place') %>
 </td>
-  <% elsif @rounds == 3 && @round_matches_index[1] == @matches[1][1].length - 1 && side == :away %>
-    <% match = @matches.has_key?(@rounds) ? @matches[@rounds][@season.matchdays][1] : nil %>
-<td colspan="<%= (@rounds - 2) * multiplicator + 1 %>">&nbsp;</td>
+  <% elsif @winner_rounds == 3 && @round_matches_index[1] == @matches[1][1].length - 1 && side == :away %>
+    <% match = @matches.has_key?(@winner_rounds) ? @matches[@winner_rounds][@season.matchdays][1] : nil %>
+<td colspan="<%= (@winner_rounds - 2) * multiplicator + 1 %>">&nbsp;</td>
 <td style="border:1px solid #AAAAAA; border-right:0px; border-bottom:0px; background:#F9F9F9; padding-left:1em;">
   <%= match ? link_to(match.home_competitor.name, competition_competitor_path(match.home_competitor)) : '-' %>
 </td>
@@ -24,13 +24,13 @@
 <% when 'bracket' %>
   <% multiplicator = @with_second_leg ? 4 : 2 %>
   
-  <% if @rounds == 2 %>
+  <% if @winner_rounds == 2 %>
 <tr>
-  <td colspan="<%= (@rounds - 1) * multiplicator + ((@rounds - 2) * 2) + 3 %>">&nbsp;</td>
+  <td colspan="<%= (@winner_rounds - 1) * multiplicator + ((@winner_rounds - 2) * 2) + 3 %>">&nbsp;</td>
   <td colspan="2"></td>
 </tr>  
 <tr>
-  <td colspan="<%= (@rounds - 1) * multiplicator + ((@rounds - 2) * 2) + 3 %>">&nbsp;</td>
+  <td colspan="<%= (@winner_rounds - 1) * multiplicator + ((@winner_rounds - 2) * 2) + 3 %>">&nbsp;</td>
   <td style="border:1px solid #AAAAAA; border-right:0px; border-bottom: 0px; background:#F9F9F9; padding-left:1em;">
     <%= match ? link_to(match.home_competitor.name, competition_competitor_path(match.home_competitor)) : '-' %>
   </td>
@@ -44,7 +44,7 @@
 </tr>
   <% end %>
 <tr>
-  <td colspan="<%= (@rounds - 1) * multiplicator + ((@rounds - 2) * 2) + 3 %>">&nbsp;</td>
+  <td colspan="<%= (@winner_rounds - 1) * multiplicator + ((@winner_rounds - 2) * 2) + 3 %>">&nbsp;</td>
   <td style="border:1px solid #AAAAAA; border-right:0px; background:#F9F9F9; padding-left:1em;">
     <%= match ? link_to(match.away_competitor.name, competition_competitor_path(match.away_competitor)) : '-' %>
   </td>

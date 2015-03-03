@@ -5,24 +5,24 @@
     <tbody>
       <tr>
         <td>&nbsp;</td>
-    <% @rounds.times do |round| %>      
-      <% with_second_leg = @with_second_leg && round + 1 != @rounds ? true : false %>
-        <td style="border:1px solid #AAAAAA; background:#F2F2F2; text-align:center;" colspan="<%= with_second_leg ? 4 : 2 %>"><%= round_title(round + 1, @rounds) %></td>
-      <% unless round + 1 == @rounds %>    
+    <% @winner_rounds.times do |round| %>      
+      <% with_second_leg = @with_second_leg && round + 1 != @winner_rounds ? true : false %>
+        <td style="border:1px solid #AAAAAA; background:#F2F2F2; text-align:center;" colspan="<%= with_second_leg ? 4 : 2 %>"><%= round_title(round + 1, @winner_rounds) %></td>
+      <% unless round + 1 == @winner_rounds %>    
         <td colspan="2"></td>
       <% end %>
     <% end %>      
       </tr>
       <tr>
         <td>&nbsp;</td>     
-    <% @rounds.times do |round| %>      
+    <% @winner_rounds.times do |round| %>      
         <td style="width:125px;">&nbsp;</td>
         <td style="width:40px;">&nbsp;</td>
-      <% if @with_second_leg && round + 1 != @rounds %>
+      <% if @with_second_leg && round + 1 != @winner_rounds %>
         <td style="width:40px;">&nbsp;</td>
         <td style="width:40px;">&nbsp;</td>
       <% end %>  
-      <% unless round + 1 == @rounds %>    
+      <% unless round + 1 == @winner_rounds %>    
         <td style="width:15px;">&nbsp;</td>
         <td style="width:15px;">&nbsp;</td>
       <% end %>
@@ -57,14 +57,14 @@
       } %>
       <% end %>
       
-      <% @rounds.times.to_a.map{|r| r + 1}[1..-1].each do |round| %>
+      <% @winner_rounds.times.to_a.map{|r| r + 1}[1..-1].each do |round| %>
         <% if match_for_round_after_first_one?(@round_matches_index[1], round) %>
         <%= render partial: 'competition/tournament_seasons/after_first_round_bracket_match', locals: { round: round } %>
           <% @round_matches_index[round]  += 1 %>
         <% end %>
       <% end %>
       
-      <% if @third_place_playoff && @rounds <= 3 && @round_matches_index[1] == @matches[1][1].length - 1 %>
+      <% if @third_place_playoff && @winner_rounds <= 3 && @round_matches_index[1] == @matches[1][1].length - 1 %>
       <%= render partial: 'competition/tournament_seasons/third_place_playoff', locals: { position: 'bracket' } %>
       <% end %>
       

@@ -3,10 +3,10 @@ require 'spec_helper'
 
 describe 'competition/tournament_seasons/_bracket.html.erb' do
   let(:competitors_limit) { 4 }
-  let(:rounds) { 2 }
+  let(:winner_rounds) { 2 }
   let(:with_second_leg) { false }
   let(:third_place_playoff) { false }
-  let(:matchdays) { rounds }
+  let(:matchdays) { winner_rounds }
   let(:preview) { false }
   
   before :each do
@@ -16,11 +16,11 @@ describe 'competition/tournament_seasons/_bracket.html.erb' do
     @season.matchdays = matchdays
     assign :season, @season
     assign :can_update_season, false
-    assign :rounds, rounds
+    assign :winner_rounds, winner_rounds
     assign :with_second_leg, with_second_leg
     assign :third_place_playoff, third_place_playoff
     round_matches_index = {}
-    rounds.times {|round| round_matches_index[round + 1] = 0 }
+    winner_rounds.times {|round| round_matches_index[round + 1] = 0 }
     assign :round_matches_index, round_matches_index
     assign :matches, load_ruby_fixture("#{fixture_path}_matches.txt")
     
@@ -38,7 +38,7 @@ describe 'competition/tournament_seasons/_bracket.html.erb' do
     
     context 'with 8 competitors' do
       let(:competitors_limit) { 8 }
-      let(:rounds) { 3 }
+      let(:winner_rounds) { 3 }
       let(:with_second_leg_matchdays) { 5 }
       
       it_behaves_like 'a tournament season bracket'
@@ -46,7 +46,7 @@ describe 'competition/tournament_seasons/_bracket.html.erb' do
     
     context 'with 16 competitors' do
       let(:competitors_limit) { 16 }
-      let(:rounds) { 4 }
+      let(:winner_rounds) { 4 }
       let(:with_second_leg_matchdays) { 7 }
       
       it_behaves_like 'a tournament season bracket'
