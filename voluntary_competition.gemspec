@@ -10,8 +10,8 @@ Gem::Specification.new do |s|
   s.authors     = ["Mathias Gawlista"]
   s.email       = ["gawlista@gmail.com"]
   s.homepage    = "https://github.com/volontariat/voluntary_music_metadata_enrichment"
-  s.summary     = "Competition product with round-robin & elimination tournament management for crowdsourcing engine voluntary."
-  s.description = "Competition product with round-robin & elimination tournament management for crowdsourcing engine voluntary."
+  s.summary     = "Competition product about round-robin & elimination tournament management with promotion / relegation and betting game for crowdsourcing engine voluntary."
+  s.description = "Competition product about round-robin & elimination tournament management with promotion / relegation and betting game for crowdsourcing engine voluntary."
   s.license     = "MIT"
 
   s.files = Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.rdoc"]
