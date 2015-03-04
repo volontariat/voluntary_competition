@@ -1,14 +1,14 @@
-<% match = @matches.has_key?(@winner_rounds) ? @matches[@winner_rounds][@season.matchdays][1] : nil %>
+<% match = @matches[true].has_key?(@winner_rounds) ? @matches[true][@winner_rounds][@season.matchdays][1] : nil %>
 <% case position %>
 <% when 'first_round_bracket_row' %>
   <% multiplicator = @with_second_leg ? 6 : 4 %>
-  <% if @winner_rounds == 2 && @round_matches_index[1] == @matches[1][1].length - 1 && side == :away %>
+  <% if @winner_rounds == 2 && @round_matches_index[true][1] == @matches[true][1][1].length - 1 && side == :away %>
 <td colspan="<%= (@winner_rounds - 2) * multiplicator + 1 %>">&nbsp;</td>
 <td colspan="2" style="border:1px solid #AAAAAA; background:#F2F2F2; text-align:center; padding-left:1em;">
   <%= t('tournament_seasons.general.rounds.third_place') %>
 </td>
-  <% elsif @winner_rounds == 3 && @round_matches_index[1] == @matches[1][1].length - 1 && side == :away %>
-    <% match = @matches.has_key?(@winner_rounds) ? @matches[@winner_rounds][@season.matchdays][1] : nil %>
+  <% elsif @winner_rounds == 3 && @round_matches_index[true][1] == @matches[true][1][1].length - 1 && side == :away %>
+    <% match = @matches[true].has_key?(@winner_rounds) ? @matches[true][@winner_rounds][@season.matchdays][1] : nil %>
 <td colspan="<%= (@winner_rounds - 2) * multiplicator + 1 %>">&nbsp;</td>
 <td style="border:1px solid #AAAAAA; border-right:0px; border-bottom:0px; background:#F9F9F9; padding-left:1em;">
   <%= match ? link_to(match.home_competitor.name, competition_competitor_path(match.home_competitor)) : '-' %>

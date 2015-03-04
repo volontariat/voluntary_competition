@@ -39,22 +39,24 @@ describe TournamentSeasonsHelper do
   describe '#round_matches_for_competitors' do
     it 'returns the matches of the round for a list of competitors' do
       assign :matches, {
-        1 => {
-          1 => [FactoryGirl.build(:tournament_match, id: 1, home_competitor_id: 1, away_competitor_id: 2)]
-        },
-        2 => {
-          2 => [
-            FactoryGirl.build(:tournament_match, id: 2, home_competitor_id: 1, away_competitor_id: 2),
-            FactoryGirl.build(:tournament_match, id: 3, home_competitor_id: 3, away_competitor_id: 4)
-          ],
-          3 => [
-            FactoryGirl.build(:tournament_match, id: 4, home_competitor_id: 2, away_competitor_id: 1),
-            FactoryGirl.build(:tournament_match, id: 5, home_competitor_id: 4, away_competitor_id: 3)
-          ]
+        true => {
+          1 => {
+            1 => [FactoryGirl.build(:tournament_match, id: 1, home_competitor_id: 1, away_competitor_id: 2)]
+          },
+          2 => {
+            2 => [
+              FactoryGirl.build(:tournament_match, id: 2, home_competitor_id: 1, away_competitor_id: 2),
+              FactoryGirl.build(:tournament_match, id: 3, home_competitor_id: 3, away_competitor_id: 4)
+            ],
+            3 => [
+              FactoryGirl.build(:tournament_match, id: 4, home_competitor_id: 2, away_competitor_id: 1),
+              FactoryGirl.build(:tournament_match, id: 5, home_competitor_id: 4, away_competitor_id: 3)
+            ]
+          }
         }
       }
       
-      expect(helper.round_matches_for_competitors(2, [3, 4]).map(&:id)).to be == [3, 5]
+      expect(helper.round_matches_for_competitors(true, 2, [3, 4]).map(&:id)).to be == [3, 5]
     end
   end
   
@@ -77,7 +79,9 @@ describe TournamentSeasonsHelper do
   describe '#first_round_matches_index_for_last_match_of_round' do
     it 'does what the name says' do
       assign :matches, {
-        1 => { 1 => 4.times.to_a.map{|t| FactoryGirl.build(:tournament_match) } }
+        true => {
+          1 => { 1 => 4.times.to_a.map{|t| FactoryGirl.build(:tournament_match) } }
+        }
       }
       
       expect(helper.first_round_matches_index_for_last_match_of_round(2)).to be == 2

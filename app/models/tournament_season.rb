@@ -145,19 +145,24 @@ class TournamentSeason < ActiveRecord::Base
   end
   
   def elimination_stage_matches
-    hash = matches.for_elimination_stage(tournament).order('round ASC, matchday ASC, created_at ASC').includes(:home_competitor, :away_competitor).group_by(&:round)
+    round_matches_index = {}
+    hash = matches.for_elimination_stage(tournament).order('of_winners_bracket DESC, round ASC, matchday ASC, created_at ASC').includes(:home_competitor, :away_competitor).group_by(&:of_winners_bracket)
     
-    hash.each do |round, working_matches| 
-      hash[round] = {} 
+    hash.each do |of_winners_bracket, of_winners_bracket_matches|
+      hash[of_winners_bracket] = {}
+      round_matches_index[of_winners_bracket] = {}
+      (of_winners_bracket ? winner_rounds : loser_rounds).times {|round| round_matches_index[of_winners_bracket][round + 1] = 0 }
+      of_winners_bracket_matches = of_winners_bracket_matches.group_by(&:round)
       
-      working_matches.group_by(&:matchday).each do |matchday, matchday_matches|
-        matchday = tournament.with_group_stage? ? matchday - tournament.last_matchday_of_group_stage : matchday
+      of_winners_bracket_matches.keys.sort.each do |round|
+        round_matches = of_winners_bracket_matches[round]
+        hash[of_winners_bracket][round] = {}
         
-        hash[round][matchday] = matchday_matches
+        round_matches.group_by(&:elimination_stage_matchday).each {|matchday, matchday_matches| hash[of_winners_bracket][round][matchday] = matchday_matches }
       end
     end
-    
-    hash
+
+    [hash, round_matches_index]
   end
   
   private

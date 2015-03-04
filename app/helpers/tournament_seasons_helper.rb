@@ -8,13 +8,13 @@ module TournamentSeasonsHelper
     ][index] || "#{round.ordinalize} #{t('tournament_seasons.general.round')}"  
   end
   
-  def round_matches_for_competitors(round, competitor_ids)
-    return nil unless @matches.has_key? round
+  def round_matches_for_competitors(of_winners_bracket, round, competitor_ids)
+    return nil unless @matches[of_winners_bracket].has_key? round
     
     matches = []
     
-    @matches[round].keys.sort.each do |matchday|
-      @matches[round][matchday].each do |match|
+    @matches[of_winners_bracket][round].keys.sort.each do |matchday|
+      @matches[of_winners_bracket][round][matchday].each do |match|
         matches << match if competitor_ids.include?(match.home_competitor_id) && competitor_ids.include?(match.away_competitor_id)
       end
     end
@@ -58,7 +58,7 @@ module TournamentSeasonsHelper
     begin
       first_round_matches_index = index if match_for_round_after_first_one?(index, round)
       index += 1
-    end while index < @matches[1][1].length
+    end while index < @matches[true][1][1].length
     
     first_round_matches_index
   end

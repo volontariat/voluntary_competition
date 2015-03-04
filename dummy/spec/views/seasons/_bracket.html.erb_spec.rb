@@ -19,10 +19,17 @@ describe 'competition/tournament_seasons/_bracket.html.erb' do
     assign :winner_rounds, winner_rounds
     assign :with_second_leg, with_second_leg
     assign :third_place_playoff, third_place_playoff
+    matches = load_ruby_fixture("#{fixture_path}_matches.txt")
+    assign :matches, matches
+    
     round_matches_index = {}
-    winner_rounds.times {|round| round_matches_index[round + 1] = 0 }
+    
+    matches.each do |of_winners_bracket, of_winners_bracket_matches|
+      round_matches_index[of_winners_bracket] ||= {}
+      of_winners_bracket_matches.keys.each {|round| round_matches_index[of_winners_bracket][round] = 0 }
+    end
+    
     assign :round_matches_index, round_matches_index
-    assign :matches, load_ruby_fixture("#{fixture_path}_matches.txt")
     
     render partial: 'competition/tournament_seasons/bracket'
     
