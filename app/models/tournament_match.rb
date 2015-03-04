@@ -19,7 +19,7 @@ class TournamentMatch < ActiveRecord::Base
   
   scope :rated, -> { where('winner_competitor_id IS NOT NULL OR draw IS NOT NULL') }
   
-  scope :for_elimination_stage, ->(tournament) { where('matchday > ?', tournament.last_matchday_of_group_stage) }
+  scope :for_elimination_stage, ->(tournament) { where('matchday >= ?', tournament.with_group_stage? ? tournament.last_matchday_of_group_stage + 1 : 1) }
   
   validates :season_id, presence: true
   validates :home_competitor_id, presence: true
@@ -28,9 +28,9 @@ class TournamentMatch < ActiveRecord::Base
   validate :goals_for_both_sides_or_both_blank
   validate :result_not_changed
   validate :results_for_current_matchday, if: 'home_goals.present? && away_goals.present?'
-  validate :result_of_both_round_matches_is_not_a_draw, if: 'home_goals.present? && away_goals.present? && season.tournament.is_single_elimination? && season.tournament.with_second_leg?'
+  validate :result_of_both_round_matches_is_not_a_draw, if: 'home_goals.present? && away_goals.present? && season.tournament.is_elimination? && season.tournament.with_second_leg?'
   
-  attr_accessible :season_id, :group_number, :round, :matchday, :home_competitor_id, :away_competitor_id, :home_goals, :away_goals, :date
+  attr_accessible :season_id, :group_number, :of_winners_bracket, :round, :matchday, :home_competitor_id, :away_competitor_id, :home_goals, :away_goals, :date
 
   before_validation :set_winner_and_loser_or_draw
   
@@ -52,22 +52,17 @@ class TournamentMatch < ActiveRecord::Base
     list.shuffle
   end
   
-  def self.winners_for_current_round(season)
-    losers_or_winners_of_current_round(season, true)
+  def self.winners_of_round(season, of_winners_bracket, round)
+    losers_or_winners_of_round(season, of_winners_bracket, round, true)
   end
   
-  def self.losers_of_current_round(season)
-    losers_or_winners_of_current_round(season, false)
-  end
-  
-  def self.losers_or_winners_of_current_round(season, is_winner)
-    round = nil
+  def self.losers_or_winners_of_round(season, of_winners_bracket, round, is_winner)
+    matches = season.matches_of_round(of_winners_bracket, round)
     
     competitor_ids = if season.tournament.with_second_leg?
       ids = []
       
-      season.matches.where(matchday: season.current_matchday - 2).order('created_at ASC').each do |first_match|
-        round = first_match.round + 1
+      matches.each do |first_match|
         second_match = season.matches.for_competitors(first_match.home_competitor_id, first_match.away_competitor_id).where(matchday: season.current_matchday - 1).first
         winner = winner_of_two_matches([first_match, second_match])
         competitor_id = is_winner ? winner : first_match.other_competitor_id(winner)
@@ -76,12 +71,11 @@ class TournamentMatch < ActiveRecord::Base
       
       ids
     else 
-      matches = season.matches.where(matchday: season.current_matchday - 1).order('created_at ASC').to_a
-      round = matches.first.round + 1
+      matches = matches.to_a
       is_winner ? matches.map(&:winner_competitor_id) : matches.map(&:loser_competitor_id)
     end
     
-    [competitor_ids, round]
+    competitor_ids
   end
   
   def self.direct_comparison(matches)
@@ -131,6 +125,17 @@ class TournamentMatch < ActiveRecord::Base
   
   def other_competitor_id(competitor_id)
     home_competitor_id == competitor_id ? away_competitor_id : home_competitor_id
+  end
+  
+  def elimination_stage_matchday
+    season.tournament.with_group_stage? ? matchday - season.tournament.last_matchday_of_group_stage : matchday
+  end
+  
+  def create_second_leg_match
+    season.matches.create!(
+      of_winners_bracket: of_winners_bracket, round: round, matchday: matchday + 1, home_competitor_id: away_competitor_id, 
+      away_competitor_id: home_competitor_id, date: Time.now
+    )
   end
   
   private

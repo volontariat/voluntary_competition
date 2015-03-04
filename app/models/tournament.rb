@@ -2,7 +2,7 @@ class Tournament < ActiveRecord::Base
   include Applicat::Mvc::Model::Resource::Base
   include GameAndExerciseTypeAssociation
   
-  SYSTEM_TYPES = %w(round_robin single_elimination)
+  SYSTEM_TYPES = %w(round_robin single_elimination double_elimination)
   
   belongs_to :game_and_exercise_type
   belongs_to :user
@@ -22,7 +22,7 @@ class Tournament < ActiveRecord::Base
   
   attr_accessor :first_season_name
   
-  before_validation :reset_elimination_attributes_if_round_robin
+  before_validation :reset_elimination_attributes_if_attributes_are_not_compatible_with_system_type
   after_create :create_first_season
   
   def is_round_robin?
@@ -31,6 +31,14 @@ class Tournament < ActiveRecord::Base
   
   def is_single_elimination?
     system_type == 1
+  end
+  
+  def is_double_elimination?
+    system_type == 2
+  end
+  
+  def is_elimination?
+    is_single_elimination? || is_double_elimination?
   end
   
   def competitors_per_group
@@ -48,10 +56,10 @@ class Tournament < ActiveRecord::Base
     
   private
   
-  def reset_elimination_attributes_if_round_robin
+  def reset_elimination_attributes_if_attributes_are_not_compatible_with_system_type
     self.with_group_stage = false if is_round_robin?
     self.groups_count = nil if is_round_robin?
-    self.third_place_playoff = false if is_round_robin?
+    self.third_place_playoff = false if is_round_robin? || is_double_elimination?
     
     return true
   end
@@ -59,7 +67,7 @@ class Tournament < ActiveRecord::Base
   def system_type_requirements
     case system_type
     when 1
-      unless groups_count.blank? || (elimination_stage_competitors_count & (elimination_stage_competitors_count - 1) == 0)
+      unless (with_group_stage? && groups_count.blank?) || (elimination_stage_competitors_count & (elimination_stage_competitors_count - 1) == 0)
         errors[:competitors_limit] << I18n.t('activerecord.errors.models.tournament.attributes.system_type.competitors_limit_must_be_power_of_two')
       end
       

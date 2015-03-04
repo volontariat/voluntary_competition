@@ -14,10 +14,37 @@ def expect_season_fixtures(fixture_path)
     
     if matchday_fixture.has_key? :number_of_matches_for_current_matchday
       @matches = @season.matches.where(matchday: matchday_fixture[:current_matchday_after_results]).to_a
-      expect(@matches.length).to be == matchday_fixture[:number_of_matches_for_current_matchday]
+      message = "Expected #{matchday_fixture[:number_of_matches_for_current_matchday]} matches on matchday #{@season.current_matchday} but got #{@matches.length}"
+      expect(@matches.length).to be == matchday_fixture[:number_of_matches_for_current_matchday], message
     end
     
-    compare_rankings(matchday_fixture[:rankings]) if matchday_fixture.has_key? :rankings
+    if matchday_fixture.has_key?(:preview_rankings)
+      hash = {}
+      
+      matchday_fixture[:preview_rankings][0].each do |matchday|
+        @season.rankings.where(matchday: matchday).order('position ASC').each do |ranking|
+          key = @hash[ranking.competitor_id].split('_')
+          key = "@first_matchday_matches[#{key[0]}].#{key[1]}_competitor_id"
+          hash[key] ||= {} 
+          attributes = ranking.attributes
+          
+          attributes.each do |k, v| 
+            if [
+              'id', 'season_id', 'competitor_id', 'group_number', 'created_at', 'updated_at',
+              'previous_position', 'trend'
+            ].include?(k.to_s) 
+              attributes.delete(k) 
+            end
+          end
+          
+          hash[key][matchday] = attributes  
+        end
+      end
+      
+      puts JSON.pretty_generate(JSON[hash.to_json])
+    elsif matchday_fixture.has_key? :rankings
+      compare_rankings(matchday_fixture[:rankings]) 
+    end
   end
 end
 
@@ -30,6 +57,10 @@ def compare_rankings(expected_rankings)
         rankings = @season.rankings.where(matchday: matchday, competitor_id: competitor_id)
         rankings = rankings.where(group_number: attributes[:group_number]) if scope == :group
         ranking = rankings.first
+        
+        if ranking.nil?
+          raise "No ranking for #{@hash[competitor_id]} on matchday #{matchday} (#{[scope, attributes[:group_number]]})"
+        end
         
         attributes.each do |attribute, value|
           group_message = scope == :group ? " of group ##{attributes[:group_number]}" : ''
@@ -94,6 +125,195 @@ describe TournamentSeason do
       @tournament.current_season.create_participations_by_competitor_ids([competitor.id], competitor.user_id)
       
       expect(@tournament.current_season.participations.where(competitor_id: competitor.id).count).to be == 1
+    end
+  end
+  
+  describe '#matchdays_count_for_elimination_stage' do
+    let(:system_type) { 1 }
+    let(:with_second_leg) { false }
+    let(:competitors_limit) { 4 }
+    
+    before :each do
+      @season = TournamentSeason.new
+      @season.tournament = FactoryGirl.build(
+        :tournament, system_type: system_type, with_second_leg: with_second_leg, competitors_limit: competitors_limit
+      )
+    end
+    
+    context 'tournament is single elimination' do
+      context 'with 4 competitors' do
+        context 'with second leg' do
+          let(:with_second_leg) { true }
+          
+          it 'returns 3' do
+            expect(@season.instance_eval{ matchdays_count_for_elimination_stage }).to be == 3
+          end
+        end
+        
+        context 'without second leg' do
+          it 'returns 2' do
+            expect(@season.instance_eval{ matchdays_count_for_elimination_stage }).to be == 2
+          end
+        end
+      end
+      
+      context 'with 8 competitors' do
+        let(:competitors_limit) { 8 }
+        
+        context 'without second leg' do
+          it 'returns 3' do
+            expect(@season.instance_eval{ matchdays_count_for_elimination_stage }).to be == 3
+          end
+        end
+      end
+    end
+    
+    context 'tournament is double elimination' do
+      let(:system_type) { 2 }
+      
+      context 'with 4 competitors' do
+        context 'with second leg' do
+          let(:with_second_leg) { true }
+          
+          it 'returns 9' do
+            expect(@season.instance_eval{ matchdays_count_for_elimination_stage }).to be == 9
+          end
+        end
+        
+        context 'without second leg' do
+          it 'returns 5' do
+            expect(@season.instance_eval{ matchdays_count_for_elimination_stage }).to be == 5
+          end
+        end
+      end
+      
+      context 'with 8 competitors' do
+        let(:competitors_limit) { 8 }
+        
+        context 'without second leg' do
+          it 'returns 8' do
+            expect(@season.instance_eval{ matchdays_count_for_elimination_stage }).to be == 8
+          end
+        end
+      end
+      
+      context 'with 16 competitors' do
+        let(:competitors_limit) { 16 }
+        
+        context 'without second leg' do
+          it 'returns 11' do
+            expect(@season.instance_eval{ matchdays_count_for_elimination_stage }).to be == 11
+          end
+        end
+      end
+    end
+  end
+  
+  describe '#winner_rounds' do
+    let(:system_type) { 1 }
+    let(:competitors_limit) { 4 }
+    let(:with_group_stage) { false }
+    let(:groups_count) { nil }
+    let(:with_second_leg) { false }
+    
+    before :each do
+      @season = described_class.new
+      @season.tournament = FactoryGirl.build(
+        :tournament, 
+        system_type: system_type, competitors_limit: competitors_limit, with_group_stage: with_group_stage,
+        groups_count: groups_count, with_second_leg: with_second_leg
+      )
+    end
+    
+    context 'tournament is elimination' do
+      context 'tournament is single elimination' do
+        context 'with second leg' do
+          let(:with_second_leg) { true }
+          
+          it 'returns 2' do
+            expect(@season.winner_rounds).to be == 2
+          end
+        end
+        
+        context 'without second leg' do
+          context 'with group stage' do
+            let(:competitors_limit) { 6 }
+            let(:with_group_stage) { true }
+            let(:groups_count) { 2 }
+            
+            it 'returns 2' do
+              expect(@season.winner_rounds).to be == 2
+            end
+          end
+          
+          context 'without group stage' do
+            it 'returns 2' do
+              expect(@season.winner_rounds).to be == 2
+            end
+          end
+        end
+      end
+      
+      context 'tournament is double elimination' do
+        let(:system_type) { 2 }
+        
+        context 'with second leg' do
+          let(:with_second_leg) { true }
+          
+          it 'returns 3' do
+            expect(@season.winner_rounds).to be == 3
+          end
+        end
+        
+        context 'without second leg' do
+          context 'with group stage' do
+            let(:competitors_limit) { 6 }
+            let(:with_group_stage) { true }
+            let(:groups_count) { 2 }
+            
+            it 'returns 3' do
+              expect(@season.winner_rounds).to be == 3
+            end
+          end
+          
+          context 'without group stage' do
+            it 'returns 3' do
+              expect(@season.winner_rounds).to be == 3
+            end
+          end
+        end
+      end
+    end
+  end
+  
+  describe '#loser_rounds' do
+    let(:competitors_limit) { 4 }
+    
+    before :each do 
+      @season = described_class.new
+      @season.tournament = FactoryGirl.build(:tournament, system_type: 2, competitors_limit: competitors_limit)
+    end
+    
+    context 'with 4 competitors' do
+      it 'returns ((winner_rounds - 2) * 2) + 1' do
+        expect(@season.loser_rounds).to be == 3
+      end
+    end
+    
+    context 'with 8 competitors' do
+      let(:competitors_limit) { 8 }
+    
+      it 'returns ((winner_rounds - 2) * 2) + 1' do
+        expect(@season.loser_rounds).to be == 5
+      end
+    end
+    
+    context 'with 16 competitors' do
+      let(:competitors_limit) { 16 }
+    
+      it 'returns ((winner_rounds - 2) * 2) + 1' do
+        expect(@season.loser_rounds).to be == 7
+      end
     end
   end
   
@@ -361,8 +581,6 @@ describe TournamentSeason do
               competitor_ids.each_with_index {|competitor_id, index| @hash[competitor_id] = "#{group_number}.#{index}" }
             end
             
-            #puts "hash:#{@hash}"
-            
             expect_season_fixtures_by_comparison 'seasons/single_elimination/even_competitors/without_second_leg/with_group_stage/season_until_last_group_matchday.txt'
          
             expect(@season.current_matchday).to be == 4
@@ -374,56 +592,109 @@ describe TournamentSeason do
   end
   
   describe '#generate_matches_for_next_round' do
+    let(:system_type) { 1 }
     let(:with_second_leg) { false }
     let(:third_place_playoff) { false }
+    let(:competitors_limit) { 4 }
     
     before :each do
       @tournament = FactoryGirl.create(
-        :tournament, system_type: 1, competitors_limit: 4, with_second_leg: with_second_leg, third_place_playoff: third_place_playoff
+        :tournament, 
+        system_type: system_type, competitors_limit: competitors_limit, with_second_leg: with_second_leg, 
+        third_place_playoff: third_place_playoff
       )
       @season = @tournament.current_season
       competitors = []
       user = FactoryGirl.create(:user)
       
-      4.times do
+      competitors_limit.times do
         competitor = FactoryGirl.create(:competitor, game_and_exercise_type: @tournament.game_and_exercise_type, user: user)
         competitors << competitor
       end
       
-      4.times do
+      competitors_limit.times do
         FactoryGirl.create(:tournament_season_participation, season: @season, competitor: competitors.shift).accept!
       end
       
+      @hash = {}
       @first_matchday_matches = @season.matches.where(matchday: 1).order('created_at ASC').to_a
-      @hash = { 
-        @first_matchday_matches[0].home_competitor_id => '0_home', @first_matchday_matches[0].away_competitor_id => '0_away',
-        @first_matchday_matches[1].home_competitor_id => '1_home', @first_matchday_matches[1].away_competitor_id => '1_away'
-      }
+      
+      @first_matchday_matches.each_with_index do |match, index|
+        @hash[match.home_competitor_id] = "#{index}_home"
+        @hash[match.away_competitor_id] = "#{index}_away"
+      end
+
       @matches = [TournamentMatch.new] # will be reloaded if current matchday_fixture has key :reload_fixture 
     end
     
-    context 'without second leg' do
-      context 'with third place playoff' do
-        let(:third_place_playoff) { true }
+    context 'single elimination' do
+      context 'without second leg' do
+        context 'with third place playoff' do
+          let(:third_place_playoff) { true }
+          
+          it 'generates 1 match for each winner of last round and 1 match for each loser of last round' do
+            expect_season_fixtures 'seasons/single_elimination/even_competitors/without_second_leg/third_place_playoff/whole_season_for_4.txt'
+          end
+        end
         
-        it 'generates 1 match for each winner of last round and 1 match for each loser of last round' do
-          expect_season_fixtures 'seasons/single_elimination/even_competitors/without_second_leg/third_place_playoff/whole_season_for_4.txt'
+        context 'without third place playoff' do
+          it 'generates 1 match for each winner of last round' do
+            expect_season_fixtures 'seasons/single_elimination/even_competitors/without_second_leg/whole_season_for_4.txt'
+          end
         end
       end
-      
-      context 'without third place playoff' do
-        it 'generates 1 match for each winner of last round' do
-          expect_season_fixtures 'seasons/single_elimination/even_competitors/without_second_leg/whole_season_for_4.txt'
+  
+      context 'with second leg' do
+        let(:with_second_leg) { true }
+        
+        it 'generates 2 matches for each winner of last round' do
+          @matches << TournamentMatch.new
+          expect_season_fixtures 'seasons/single_elimination/even_competitors/with_second_leg/whole_season_for_4.txt'
         end
       end
     end
-
-    context 'with second leg' do
-      let(:with_second_leg) { true }
+    
+    context 'double elimination' do
+      let(:system_type) { 2 }
       
-      it 'generates 2 matches for each winner of last round' do
-        @matches << TournamentMatch.new
-        expect_season_fixtures 'seasons/single_elimination/even_competitors/with_second_leg/whole_season_for_4.txt'
+      context 'with 4 competitors' do
+        context 'without second leg' do
+          context 'winner of winner bracket wins first match against winner of loser bracket' do
+            it 'generates 1 winner bracket match for each winner of first round plus 1 loser bracket match for each loser of first round and in the end a match between winner bracket and loser bracket winner' do
+              expect_season_fixtures 'seasons/double_elimination/even_competitors/4/without_second_leg/w_w_wins_match1_vs_l_w/whole_season.txt'
+            end
+          end
+          
+          context 'winner of loser bracket wins first match against winner of winner bracket' do
+            it 'generates 1 winner bracket match for each winner of first round plus 1 loser bracket match for each loser of first round, a match between winner bracket and loser bracket winner and a second leg match for final' do
+              expect_season_fixtures 'seasons/double_elimination/even_competitors/4/without_second_leg/l_w_wins_match1_vs_w_w/whole_season.txt'
+            end
+          end
+        end
+      end
+      
+      context 'with 8 competitors' do
+        let(:competitors_limit) { 8 }
+        
+        context 'without second leg' do
+          context 'winner of winner bracket wins first match against winner of loser bracket' do
+            it 'generates 1 winner bracket match for each winner of first round plus 1 loser bracket match for each loser of first round and in the end a match between winner bracket and loser bracket winner' do
+              expect_season_fixtures 'seasons/double_elimination/even_competitors/8/without_second_leg/w_w_wins_match1_vs_l_w/whole_season.txt'
+            end
+          end
+        end
+      end
+      
+      context 'with 16 competitors' do
+        let(:competitors_limit) { 16 }
+        
+        context 'without second leg' do
+          context 'winner of winner bracket wins first match against winner of loser bracket' do
+            it 'generates 1 winner bracket match for each winner of first round plus 1 loser bracket match for each loser of first round and in the end a match between winner bracket and loser bracket winner' do
+              expect_season_fixtures 'seasons/double_elimination/even_competitors/16/without_second_leg/w_w_wins_match1_vs_l_w/whole_season.txt'
+            end
+          end
+        end
       end
     end
   end

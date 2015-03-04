@@ -59,6 +59,7 @@ class AddProductCompetition < ActiveRecord::Migration
       t.string :name
       t.integer :matchdays, limit: 2
       t.integer :current_matchday, limit: 2
+      t.boolean :w_of_l_won_grand_finals_first_match_against_w_of_w
       t.string :state
       t.timestamps
     end
@@ -102,6 +103,7 @@ class AddProductCompetition < ActiveRecord::Migration
       t.integer :group_number, limit: 2
       t.integer :round, limit: 2
       t.integer :matchday, limit: 2
+      t.boolean :of_winners_bracket
       t.integer :home_competitor_id
       t.integer :away_competitor_id
       t.integer :home_goals
@@ -114,7 +116,7 @@ class AddProductCompetition < ActiveRecord::Migration
       t.timestamps
     end
     
-    add_index :tournament_matches, [:season_id, :group_number, :matchday]   
+    add_index :tournament_matches, [:season_id, :group_number, :of_winners_bracket, :round, :matchday]   
   end
   
   def down

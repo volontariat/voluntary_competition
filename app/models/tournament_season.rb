@@ -30,15 +30,6 @@ class TournamentSeason < ActiveRecord::Base
     end
   end
   
-  def rounds
-    if tournament.is_round_robin?
-      tournament.competitors_limit % 2 == 0 ? tournament.competitors_limit - 1 : tournament.competitors_limit
-    elsif tournament.is_single_elimination?
-      working_matchdays = tournament.with_group_stage? ? matchdays - tournament.last_matchday_of_group_stage : matchdays
-      tournament.with_second_leg? ? (working_matchdays + 1) / 2 : working_matchdays
-    end
-  end
-  
   def competitors_needed?
     if tournament.competitors_limit - participations.accepted.count > 0
       true
@@ -72,7 +63,7 @@ class TournamentSeason < ActiveRecord::Base
     
     if tournament.is_round_robin?
       matchdays_count = generate_round_robin_matches(competitor_ids)
-    elsif tournament.is_single_elimination? && tournament.with_group_stage?
+    elsif tournament.is_elimination? && tournament.with_group_stage?
       offset = 0
       
       tournament.groups_count.times do |group_number|
@@ -80,9 +71,9 @@ class TournamentSeason < ActiveRecord::Base
         offset += tournament.competitors_per_group
       end
       
-      matchdays_count += matchdays_count_for_elimination_stage(tournament.elimination_stage_competitors_count)
-    elsif tournament.is_single_elimination?
-      matchdays_count = generate_single_elimination_matches(competitor_ids)
+      matchdays_count += matchdays_count_for_elimination_stage
+    elsif tournament.is_elimination?
+      matchdays_count = generate_elimination_matches(competitor_ids)
     end
     
     tournament.update_attribute(:matchdays_per_season, matchdays_count)
@@ -92,6 +83,36 @@ class TournamentSeason < ActiveRecord::Base
   
   def initialize_rankings
     TournamentSeasonRanking.create_by_season(self)
+  end
+  
+  def winner_rounds
+    working_matchdays = single_elimination_matchdays_count
+    rounds = tournament.with_second_leg? ? (working_matchdays + 1) / 2 : working_matchdays
+    
+    tournament.is_single_elimination? ? rounds : rounds + 1
+  end
+  
+  def loser_rounds
+    ((winner_rounds - 2) * 2) + 1
+  end
+  
+  def first_match_of_last_matchday
+    matches.where(matchday: current_matchday - 1).first
+  end
+  
+  def round_of_last_matchday
+    first_match_of_last_matchday.round
+  end
+  
+  def matches_of_round(of_winners_bracket, round)
+    scope = matches.where(of_winners_bracket: of_winners_bracket, round: round)
+    
+    if tournament.with_second_leg?
+      first_match_day = scope.order('matchday ASC').first.matchday
+      scope = scope.where(matchday: first_match_day)
+    end
+    
+    scope.order('created_at ASC')
   end
   
   def consider_matches(matches_param_value, matchday)
@@ -105,7 +126,7 @@ class TournamentSeason < ActiveRecord::Base
     return input_matches if working_matches.none?
     
     competitor_ids = working_matches.map{|m| [m.home_competitor_id, m.away_competitor_id]}.flatten
-    matchday = working_matches.first.matchday
+    #matchday = working_matches.first.matchday
     working_rankings = rankings.where(matchday: matchday, competitor_id: competitor_ids).group_by(&:competitor_id)
     
     working_matches.each do |match|
@@ -119,20 +140,40 @@ class TournamentSeason < ActiveRecord::Base
     
     matchday_played = if tournament.is_round_robin? || (tournament.with_group_stage? && matchday <= tournament.last_matchday_of_group_stage)
       rankings.where(matchday: matchday, played: false).none?
-    elsif tournament.is_single_elimination?
+    elsif tournament.is_elimination?
       rankings.where(matchday: matchday, played: true).count == (matches.where(matchday: matchday).count * 2)
     end
     
-    if matchday_played && matchday + 1 <= matchdays
-      increment!(:current_matchday) 
+    if matchday_played && (
+      matchday + 1 <= matchdays || (
+        tournament.is_double_elimination? && !w_of_l_won_grand_finals_first_match_against_w_of_w?
+      ) 
+    )
+      self.current_matchday += 1
       
       competitors.each do |competitor|
         TournamentSeasonRanking.create_by_competitor(competitor.id, current_matchday, self)
       end
       
-      if tournament.is_single_elimination? && tournament.with_group_stage? && matchday == tournament.last_matchday_of_group_stage
-        generate_single_elimination_matches_for_winners_and_losers
-      elsif tournament.is_single_elimination? && (
+      if matchday + 1 > matchdays
+        first_grand_finals_match = input_matches.first
+        
+        if w_of_l_won_grand_finals_first_match_against_w_of_w_check?(first_grand_finals_match)
+          self.matchdays += 1
+          self.w_of_l_won_grand_finals_first_match_against_w_of_w = true
+          first_grand_finals_match.create_second_leg_match
+        else
+          return input_matches
+        end
+      end
+      
+      save!
+      
+      return input_matches if w_of_l_won_grand_finals_first_match_against_w_of_w?
+      
+      if tournament.is_elimination? && tournament.with_group_stage? && matchday == tournament.last_matchday_of_group_stage
+        generate_elimination_matches_for_winners_and_losers
+      elsif tournament.is_elimination? && (
         (tournament.with_second_leg? && matchday % 2 == 0) || !tournament.with_second_leg?
       ) && (
         !tournament.with_group_stage? || matchday > tournament.last_matchday_of_group_stage
@@ -142,6 +183,11 @@ class TournamentSeason < ActiveRecord::Base
     end
     
     input_matches
+  end
+  
+  def w_of_l_won_grand_finals_first_match_against_w_of_w_check?(first_grand_finals_match)
+    losers_finals_winner = TournamentMatch.winners_of_round(self, false, loser_rounds - 1).first
+    first_grand_finals_match.winner_competitor_id == losers_finals_winner
   end
   
   def elimination_stage_matches
@@ -233,19 +279,19 @@ class TournamentSeason < ActiveRecord::Base
           group_number: group_number, matchday: matchday, home_competitor_id: home_competitor_id, away_competitor_id: away_competitor_id, date: Time.now
         )
         primitive_matches[matchday] ||= []
-        primitive_matches[matchday] << [home_competitor_id, away_competitor_id]
+        primitive_matches[matchday] << [nil, nil, home_competitor_id, away_competitor_id]
         combinations.delete found_combination
         already_played_matchdays[competitor_id][matchday] = match_played_home
         already_played_matchdays[other_competitor_id][matchday] = match_played_home ? false : true
       end
     end
     
-    generate_second_leg_matches(nil, primitive_matches, first_leg_matchdays_count) if tournament.with_second_leg?
+    generate_second_leg_matches(primitive_matches, first_leg_matchdays_count) if tournament.with_second_leg?
     
     matchdays_count = tournament.with_second_leg? ? (first_leg_matchdays_count * 2) : first_leg_matchdays_count
   end
   
-  def generate_single_elimination_matches(competitor_ids)
+  def generate_elimination_matches(competitor_ids)
     already_played, primitive_matches = {}, {}
       
     competitor_ids.each do |competitor_id|
@@ -256,47 +302,54 @@ class TournamentSeason < ActiveRecord::Base
       next if other_competitor_id == nil
       
       matches.create!(
-        round: 1, matchday: 1, home_competitor_id: competitor_id, away_competitor_id: other_competitor_id, date: Time.now
+        of_winners_bracket: true, round: 1, matchday: 1, home_competitor_id: competitor_id, away_competitor_id: other_competitor_id, date: Time.now
       )
       primitive_matches[1] ||= []
-      primitive_matches[1] << [competitor_id, other_competitor_id] 
+      primitive_matches[1] << [true, 1, competitor_id, other_competitor_id] 
       already_played[competitor_id] = true
       already_played[other_competitor_id] = true
     end
     
-    generate_second_leg_matches(1, primitive_matches, 1) if tournament.with_second_leg?
+    generate_second_leg_matches(primitive_matches, 1) if tournament.with_second_leg?
     
-    matchdays_count_for_elimination_stage(competitor_ids.length)
+    matchdays_count_for_elimination_stage
   end
   
-  def generate_second_leg_matches(round, primitive_matches, matchday_offset)
+  def generate_second_leg_matches(primitive_matches, matchday_offset)
     primitive_matches.keys.sort.each do |matchday|
       primitive_matches[matchday].each do |match|
         working_matchday = matchday_offset + matchday
         matches.create!(
-          round: round, matchday: working_matchday, home_competitor_id: match.last, away_competitor_id: match.first, date: Time.now
+          of_winners_bracket: match[0], round: match[1], matchday: working_matchday, home_competitor_id: match[3], away_competitor_id: match[2], date: Time.now
         )
       end
     end
   end
   
-  def matchdays_count_for_elimination_stage(competitors_count)
-    matchdays_count, competitors_left = 0, competitors_count
+  def matchdays_count_for_elimination_stage
+    if tournament.is_double_elimination?
+      matchdays = (winner_rounds - 1) + (loser_rounds - 1)
+      matchdays *= 2 if tournament.with_second_leg?
+      matchdays += (w_of_l_won_grand_finals_first_match_against_w_of_w ? 2 : 1)
+      matchdays
+    else
+      single_elimination_matchdays_count
+    end
+  end
+  
+  def single_elimination_matchdays_count
+    matchdays_count, competitors_left = 0, tournament.elimination_stage_competitors_count
       
     begin
       matchdays_count += 1
       competitors_left = competitors_left / 2
     end while competitors_left > 1
     
-    if tournament.with_second_leg?
-      # - 1 because the final and third place playoff is only one match
-      (matchdays_count * 2) - 1
-    else
-      matchdays_count
-    end
+    # - 1 because the final and third place playoff is only one match
+    tournament.with_second_leg? ? (matchdays_count * 2) - 1 : matchdays_count
   end
   
-  def generate_single_elimination_matches_for_winners_and_losers
+  def generate_elimination_matches_for_winners_and_losers
     primitive_matches = {}
     working_rankings = winners_and_losers_of_group_stage
     matchday = tournament.last_matchday_of_group_stage + 1
@@ -309,16 +362,16 @@ class TournamentSeason < ActiveRecord::Base
         
         loser_group = modulo_result == 1 ? group_number + 1 : group_number - 1
         match = matches.create!(
-          round: 1, matchday: matchday, date: Time.now,
+          of_winners_bracket: true, round: 1, matchday: matchday, date: Time.now,
           home_competitor_id: working_rankings[group_number][1].competitor_id, 
           away_competitor_id: working_rankings[loser_group][2].competitor_id 
         )
         primitive_matches[matchday] ||= []
-        primitive_matches[matchday] << [match.home_competitor_id, match.away_competitor_id] 
+        primitive_matches[matchday] << [true, 1, match.home_competitor_id, match.away_competitor_id] 
       end
     end
     
-    generate_second_leg_matches(1, primitive_matches, 1) if tournament.with_second_leg?
+    generate_second_leg_matches(primitive_matches, 1) if tournament.with_second_leg?
   end
   
   def winners_and_losers_of_group_stage
@@ -331,21 +384,126 @@ class TournamentSeason < ActiveRecord::Base
   
   def generate_matches_for_next_round
     primitive_matches, round = {}, nil
+    last_round = first_match_of_last_matchday.round
+    last_round_of_winners_bracket = first_match_of_last_matchday.of_winners_bracket
     
     (tournament.third_place_playoff? ? [true, false] : [true]).each do |is_winner|
       next unless is_winner || (is_winner == false && current_matchday == matchdays)
       
-      competitor_ids, round = TournamentMatch.losers_or_winners_of_current_round(self, is_winner)
-      
-      begin
-        match = matches.create!(
-          round: round, matchday: current_matchday, home_competitor_id: competitor_ids.shift, away_competitor_id: competitor_ids.shift, date: Time.now
-        )
-        primitive_matches[current_matchday] ||= []
-        primitive_matches[current_matchday] << [match.home_competitor_id, match.away_competitor_id] 
-      end while competitor_ids.any?
+      if !is_winner
+        [[true, last_round, false, nil, last_round + 1, current_matchday]]
+      elsif tournament.is_single_elimination?
+        [[true, last_round, true, true, last_round + 1, current_matchday]]
+      else
+        if last_round_of_winners_bracket && last_round == 1
+          # after W1
+          #puts "After #{(last_round_of_winners_bracket ? 'W' : 'L')}-#{last_round} case 1"
+          [
+            [true, last_round, true, true, last_round + 1, current_matchday + 1], [true, last_round, false, false, last_round, current_matchday]
+          ]
+        elsif last_round_of_winners_bracket && last_round != winner_rounds - 1
+          if last_round % 2 == 0
+            # e.g. after W2
+            #puts "After #{(last_round_of_winners_bracket ? 'W' : 'L')}-#{last_round} case 2"
+            [
+              [true, last_round, true, true, last_round + 1, current_matchday + 2], 
+              [
+                [true, last_round, false, false, last_round, current_matchday], 
+                [false, last_round - 1, true, false, last_round, current_matchday]
+              ]
+            ]
+          else
+            # e.g. after W3
+            #puts "After #{(last_round_of_winners_bracket ? 'W' : 'L')}-#{last_round} case 3"
+            list = []
+            
+            if matches.where(of_winners_bracket: true, round: last_round).count > 1
+              list << [true, last_round, true, true, last_round + 1, current_matchday + 2]
+            end
+            
+            list << [
+              [true, last_round, false, false, last_round + 1, current_matchday], 
+              [false, last_round, true, false, last_round + 1, current_matchday]
+            ]
+          end
+        elsif last_round_of_winners_bracket
+          # after winner's finals wait for loser's finals
+          #puts "After #{(last_round_of_winners_bracket ? 'W' : 'L')}-#{last_round} case 4"
+          
+          
+          [
+            [
+              [true, last_round, false, false, loser_rounds - 1, current_matchday],
+              #[false, last_round - 1, true, false, last_round, current_matchday]
+              [false, loser_rounds - 2, true, false, loser_rounds - 1, current_matchday]
+            ]
+          ]
+          
+          
+          
+        elsif last_round != loser_rounds - 1
+          if last_round % 2 != 0
+            #puts "After #{(last_round_of_winners_bracket ? 'W' : 'L')}-#{last_round} case 5"
+            # e.g. after L1, L3
+            []
+          else
+            # e.g. after L2
+            #puts "After #{(last_round_of_winners_bracket ? 'W' : 'L')}-#{last_round} case 6"
+            [[false, last_round, true, false, last_round + 1, current_matchday]]
+          end
+        else
+          # after losers finals transformation to grand finals
+          #puts "After #{(last_round_of_winners_bracket ? 'W' : 'L')}-#{last_round} case 7"
+          [
+            [
+              [true, winner_rounds - 1, true, true, winner_rounds, current_matchday], 
+              [false, last_round, true, true, winner_rounds, current_matchday]
+            ]
+          ]
+        end
+      end.each do |of_winners_bracket_and_winner_or_loser|
+        if of_winners_bracket_and_winner_or_loser[0].is_a? Array
+          competitor_ids = [
+            TournamentMatch.losers_or_winners_of_round(
+              self, of_winners_bracket_and_winner_or_loser[0][0], 
+              of_winners_bracket_and_winner_or_loser[0][1], of_winners_bracket_and_winner_or_loser[0][2]
+            ),
+            TournamentMatch.losers_or_winners_of_round(
+              self, of_winners_bracket_and_winner_or_loser[1][0], 
+              of_winners_bracket_and_winner_or_loser[1][1], of_winners_bracket_and_winner_or_loser[1][2]
+            )
+          ]
+          to_of_winners_bracket = of_winners_bracket_and_winner_or_loser[0][3]
+          next_round = of_winners_bracket_and_winner_or_loser[0][4]
+          matchday = of_winners_bracket_and_winner_or_loser[0][5]
+          
+          begin
+            match = matches.create!(
+              of_winners_bracket: to_of_winners_bracket, round: next_round, matchday: matchday, 
+              home_competitor_id: competitor_ids[0].shift, away_competitor_id: competitor_ids[1].shift, date: Time.now
+            )
+            #puts "After #{(last_round_of_winners_bracket ? 'W' : 'L')}-#{last_round} case 1 match: #{{ to_of_winners_bracket: to_of_winners_bracket, next_round: next_round, matchday: matchday, match_id: match.id }}"
+            primitive_matches[matchday] ||= []
+            primitive_matches[matchday] << [to_of_winners_bracket, next_round, match.home_competitor_id, match.away_competitor_id] 
+          end while competitor_ids[0].any?
+        else
+          from_winners_bracket, round, is_winner, to_of_winners_bracket, next_round, matchday = of_winners_bracket_and_winner_or_loser
+          competitor_ids = TournamentMatch.losers_or_winners_of_round(self, from_winners_bracket, round, is_winner)
+          
+          begin
+            match = matches.create!(
+              of_winners_bracket: to_of_winners_bracket, round: next_round, matchday: matchday, home_competitor_id: competitor_ids.shift, away_competitor_id: competitor_ids.shift, date: Time.now
+            )
+            #puts "After #{(last_round_of_winners_bracket ? 'W' : 'L')}-#{last_round} case 2 match: #{{ to_of_winners_bracket: to_of_winners_bracket, next_round: next_round, matchday: matchday, match_id: match.id }}"
+            primitive_matches[matchday] ||= []
+            primitive_matches[matchday] << [to_of_winners_bracket, next_round, match.home_competitor_id, match.away_competitor_id] 
+          end while competitor_ids.any?
+        end
+      end
     end
     
-    generate_second_leg_matches(round, primitive_matches, 1) if tournament.with_second_leg? && current_matchday != matchdays
+    primitive_matches.each {|matchday| primitive_matches.delete(matchday) if matchday == matchdays }
+    
+    generate_second_leg_matches(primitive_matches, 1) if primitive_matches.any? && tournament.with_second_leg? && current_matchday != matchdays
   end
 end

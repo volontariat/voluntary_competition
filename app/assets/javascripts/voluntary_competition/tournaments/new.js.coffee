@@ -5,7 +5,11 @@ $(document).ready ->
       $('#tournament_with_group_stage_wrapper').hide()
       $('#tournament_groups_count_wrapper').hide()
     else
-      $('#tournament_third_place_playoff_wrapper').show()
+      if $("input[name='tournament[system_type]']:checked").val() == '2'
+        $('#tournament_third_place_playoff_wrapper').hide()
+      else
+        $('#tournament_third_place_playoff_wrapper').show()
+        
       $('#tournament_with_group_stage_wrapper').show()
 
   $(document.body).on "change", "input[name='tournament[with_group_stage]']", ->

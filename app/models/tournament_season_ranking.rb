@@ -45,7 +45,7 @@ class TournamentSeasonRanking < ActiveRecord::Base
   def self.create_by_competitor(competitor_id, matchday, season)
     played = if season.tournament.is_round_robin? || (season.tournament.with_group_stage? && matchday <= season.tournament.last_matchday_of_group_stage)
       season.matches.for_competitor(competitor_id).where(matchday: matchday).any? ? false : true
-    elsif season.tournament.is_single_elimination?
+    elsif season.tournament.is_elimination?
       false
     end
     
@@ -67,7 +67,7 @@ class TournamentSeasonRanking < ActiveRecord::Base
   def self.sort(season, matchday, group_number = nil)
     working_rankings = season.rankings.where(matchday: matchday, group_number: group_number)
     
-    if season.tournament.is_round_robin? || (!group_number.nil? && season.tournament.with_group_stage? && matchday <= season.tournament.last_matchday_of_group_stage)
+    if season.tournament.is_round_robin? || season.tournament.is_double_elimination? || (!group_number.nil? && season.tournament.with_group_stage? && matchday <= season.tournament.last_matchday_of_group_stage)
       working_rankings = working_rankings.order('points DESC, goal_differential DESC, goals_scored DESC').to_a
     else
       working_rankings = working_rankings.order('points DESC, matches DESC, goal_differential DESC, goals_scored DESC').to_a

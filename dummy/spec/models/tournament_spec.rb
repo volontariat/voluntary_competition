@@ -119,15 +119,31 @@ describe Tournament do
   
   describe 'callbacks' do
     describe 'before_validation' do
-      describe '#reset_elimination_attributes_if_round_robin' do
-        it 'does what the name says' do
-          tournament = FactoryGirl.build(:tournament, with_group_stage: true, third_place_playoff: true, groups_count: 1)
-          
-          tournament.valid?
-          
-          expect(tournament.with_group_stage).to be_falsey
-          expect(tournament.groups_count).to be == nil
-          expect(tournament.third_place_playoff).to be_falsey
+      describe '#reset_elimination_attributes_if_attributes_are_not_compatible_with_system_type' do
+        context 'tournament is round-robin' do
+          it 'does what the name says' do
+            tournament = FactoryGirl.build(:tournament, with_group_stage: true, third_place_playoff: true, groups_count: 1)
+            
+            tournament.valid?
+            
+            expect(tournament.with_group_stage).to be_falsey
+            expect(tournament.groups_count).to be == nil
+            expect(tournament.third_place_playoff).to be_falsey
+          end
+        end
+        
+        context 'tournament is double elimination' do
+          it 'does what the name says' do
+            tournament = FactoryGirl.build(
+              :tournament, system_type: 2, with_group_stage: true, third_place_playoff: true, groups_count: 2
+            )
+            
+            tournament.valid?
+            
+            expect(tournament.with_group_stage).to be_truthy
+            expect(tournament.groups_count).to be == 2
+            expect(tournament.third_place_playoff).to be_falsey
+          end
         end
       end
     end
@@ -154,6 +170,34 @@ describe Tournament do
       tournament = FactoryGirl.build(:tournament, system_type: 1)
       
       expect(tournament.is_single_elimination?).to be_truthy      
+    end
+  end
+  
+  describe '#is_double_elimination?' do
+    it 'tells if the tournament is double elimination' do
+      tournament = FactoryGirl.build(:tournament)
+      
+      expect(tournament.is_double_elimination?).to be_falsey
+      
+      tournament = FactoryGirl.build(:tournament, system_type: 2)
+      
+      expect(tournament.is_double_elimination?).to be_truthy      
+    end
+  end
+  
+  describe '#is_elimination?' do
+    it 'tells if the tournament is elimination' do
+      tournament = FactoryGirl.build(:tournament)
+      
+      expect(tournament.is_elimination?).to be_falsey
+      
+      tournament = FactoryGirl.build(:tournament, system_type: 1)
+      
+      expect(tournament.is_elimination?).to be_truthy    
+      
+      tournament = FactoryGirl.build(:tournament, system_type: 2)
+      
+      expect(tournament.is_elimination?).to be_truthy      
     end
   end
   
