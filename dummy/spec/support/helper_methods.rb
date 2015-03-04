@@ -3,30 +3,34 @@ require 'fileutils'
 def matches_factory(hash)
   matches, match_id = {}, 1
   
-  hash.each do |round, round_matches|
-    matches[round] ||= {}
-    matchdays, competitor_ids = round_matches
+  hash.each do |of_winners_bracket, of_winners_bracket_matches|
+    matches[of_winners_bracket] ||= {}
     
-    matchdays.each_with_index do |matchday, matchday_index|
-      matches[round][matchday] ||= []
+    of_winners_bracket_matches.each do |round, round_matches|
+      matches[of_winners_bracket][round] ||= {}
+      matchdays, competitor_ids = round_matches
       
-      competitors_offset = 0
-      
-      begin
-        match_competitors = competitor_ids[competitors_offset..(competitors_offset + 1)]
-        match_data = if matchday_index == 0
-          [match_competitors[0], match_competitors[1], 1, 0]
-        else
-          [match_competitors[1], match_competitors[0], 0, 1]
-        end 
+      matchdays.each_with_index do |matchday, matchday_index|
+        matches[of_winners_bracket][round][matchday] ||= []
         
-        matches[round][matchday] << match_factory(
-          id: match_id, home_competitor_id: match_data[0], away_competitor_id: match_data[1], 
-          home_goals: match_data[2], away_goals: match_data[3]
-        )
-        match_id += 1
-        competitors_offset += 2
-      end while competitor_ids[competitors_offset..(competitors_offset + 1)].length == 2
+        competitors_offset = 0
+        
+        begin
+          match_competitors = competitor_ids[competitors_offset..(competitors_offset + 1)]
+          match_data = if matchday_index == 0
+            [match_competitors[0], match_competitors[1], 1, 0]
+          else
+            [match_competitors[1], match_competitors[0], 0, 1]
+          end 
+          
+          matches[of_winners_bracket][round][matchday] << match_factory(
+            id: match_id, home_competitor_id: match_data[0], away_competitor_id: match_data[1], 
+            home_goals: match_data[2], away_goals: match_data[3]
+          )
+          match_id += 1
+          competitors_offset += 2
+        end while competitor_ids[competitors_offset..(competitors_offset + 1)].length == 2
+      end
     end
   end
   
