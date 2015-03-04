@@ -1,0 +1,28 @@
+<% rounds = of_winners_bracket ? @winner_rounds : @loser_rounds - 1 %>
+<tr>
+  <td>&nbsp;</td>
+<% rounds.times do |round| %>      
+  <% with_second_leg = @with_second_leg && round + 1 != rounds ? true : false %>
+  <td style="border:1px solid #AAAAAA; background:#F2F2F2; text-align:center;" colspan="<%= with_second_leg ? 4 : 2 %>">
+    <%= round_title(of_winners_bracket, round + 1) %>
+  </td>
+  <% unless round + 1 == rounds %>    
+  <td colspan="2"></td>
+  <% end %>
+<% end %>      
+</tr>
+<tr>
+  <td>&nbsp;</td>     
+<% rounds.times do |round| %>      
+  <td style="width:125px;">&nbsp;</td>
+  <td style="width:40px;">&nbsp;</td>
+  <% if @with_second_leg && round + 1 != rounds %>
+  <td style="width:40px;">&nbsp;</td>
+  <td style="width:40px;">&nbsp;</td>
+  <% end %>  
+  <% unless round + 1 == rounds %>    
+  <td style="width:15px;">&nbsp;</td>
+  <td style="width:15px;">&nbsp;</td>
+  <% end %>
+<% end %>
+</tr>   

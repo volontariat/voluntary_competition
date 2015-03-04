@@ -1,0 +1,39 @@
+<% rowspan = rowspan ? ' rowspan="' + rowspan.to_s + '"' : '' %>
+<% rounds = of_winners_bracket ? @winner_rounds : @loser_rounds %>
+<% with_second_leg = @with_second_leg && round != rounds ? true : false %>
+<td<%= raw rowspan %> style="border:1px solid #AAAAAA;<%= side == :home ? ' border-bottom: 0px;' : '' %> border-right:0px; background:#F9F9F9; text-align:left; padding-left:1em; color:#000000;">
+<% if matches.any? %>
+    <%= link_to matches.first.send("#{side}_competitor").name, competition_competitor_path(matches.first.send("#{side}_competitor")) %>
+<% else %>
+    - 
+<% end %>
+  </td>
+  <td<%= raw rowspan %> style="border:1px solid #AAAAAA;<%= side == :home ? ' border-bottom: 0px;' : '' %> <%= @with_second_leg ? 'border-right:0px;' : '' %> background:#F9F9F9; text-align:center;">
+<% if matches.any? && matches.first.matchday == @season.current_matchday && matches.first.send("#{side}_goals").blank? && @can_update_season %>
+    <input type="text" style="width:19px; text-align:center; position:relative; top:5px;" name="matches[<%= matches.first.id %>][<%= side %>_goals]" id="matches_<%= matches.first.id %>_<%= side %>_goals">   
+<% else %>
+    <%= matches.any? && matches.first.send("#{side}_goals") || '-' %>
+<% end %>
+  </td>
+<% if with_second_leg %>
+  <td<%= raw rowspan %> style="border:1px solid #AAAAAA;<%= side == :home ? ' border-bottom: 0px;' : '' %> border-right:0px; background:#F9F9F9; text-align:center;">
+  <% second_leg_side = side == :home ? 'away' : 'home' %>
+  <% goals = matches.any? ? matches.second.send("#{second_leg_side}_goals") : nil %>
+  <% if matches.any? && matches.second.matchday == @season.current_matchday && goals.blank? && @can_update_season %>   
+    <input type="text" style="width:19px; text-align:center; position:relative; top:5px;" name="matches[<%= matches.second.id %>][<%= second_leg_side %>_goals]" id="matches_<%= matches.second.id %>_<%= second_leg_side %>_goals">    
+  <% else %>
+    <%= goals || '-' %>
+  <% end %>
+  </td>
+  <td<%= raw rowspan %> style="border:1px solid #AAAAAA;<%= side == :home ? ' border-bottom: 0px;' : '' %> background:#F9F9F9; text-align:center;">
+  <% if matches.any? && matches.second.home_goals.present? %>
+    <% if side == :home %>
+    <%= matches.first.home_goals + matches.second.away_goals %>
+    <% else %>
+    <%= matches.first.away_goals + matches.second.home_goals %>
+    <% end %>
+  <% else %>
+    -
+  <% end %>
+  </td>
+<% end %>

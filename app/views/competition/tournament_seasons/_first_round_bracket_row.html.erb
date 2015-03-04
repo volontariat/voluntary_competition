@@ -1,49 +1,30 @@
-<% goals ||= '-' %>
-<% rowspan ||= nil %>
 <% fourth_rowspan ||= rowspan %>
-<% rowspan = rowspan ? ' rowspan="' + rowspan.to_s + '"' : '' %>
 <% fourth_rowspan = fourth_rowspan ? ' rowspan="' + fourth_rowspan.to_s + '"' : '' %>
 <% fourth_col_style ||= 'border:0px solid #000000; border-bottom-width:2px;' %>
 <% with_fourth_col = true if local_assigns[:with_fourth_col].nil? %>
 <tr>
   <td style="height:7px;"></td>
-  <td<%= raw rowspan %> style="border:1px solid #AAAAAA;<%= side == :home ? ' border-bottom: 0px;' : '' %> border-right:0px; background:#F9F9F9; text-align:left; padding-left:1em; color:#000000;">
-    <%= link_to matches.first.send("#{side}_competitor").name, competition_competitor_path(matches.first.send("#{side}_competitor")) %>
-  </td>
-  <td<%= raw rowspan %> style="border:1px solid #AAAAAA;<%= side == :home ? ' border-bottom: 0px;' : '' %> <%= @with_second_leg ? 'border-right:0px;' : '' %> background:#F9F9F9; text-align:center;">
-<% if matches.first.matchday == @season.current_matchday && matches.first.send("#{side}_goals").blank? && @can_update_season %>
-    <input type="text" style="width:19px; text-align:center; position:relative; top:5px;" name="matches[<%= matches.first.id %>][<%= side %>_goals]" id="matches_<%= matches.first.id %>_<%= side %>_goals">   
-<% else %>
-    <%= matches.first.send("#{side}_goals") || '-' %>
-<% end %>
-  </td>
-<% if @with_second_leg %>
-  <td<%= raw rowspan %> style="border:1px solid #AAAAAA;<%= side == :home ? ' border-bottom: 0px;' : '' %> border-right:0px; background:#F9F9F9; text-align:center;">
-  <% second_leg_side = side == :home ? 'away' : 'home' %>
-  <% goals = matches.second.send("#{second_leg_side}_goals") %>
-  <% if matches.second.matchday == @season.current_matchday && goals.blank? && @can_update_season %>   
-    <input type="text" style="width:19px; text-align:center; position:relative; top:5px;" name="matches[<%= matches.second.id %>][<%= second_leg_side %>_goals]" id="matches_<%= matches.second.id %>_<%= second_leg_side %>_goals">    
-  <% else %>
-    <%= goals || '-' %>
-  <% end %>
-  </td>
-  <td<%= raw rowspan %> style="border:1px solid #AAAAAA;<%= side == :home ? ' border-bottom: 0px;' : '' %> background:#F9F9F9; text-align:center;">
-  <% if matches.second.home_goals.present? %>
-    <% if side == :home %>
-    <%= matches.first.home_goals + matches.second.away_goals %>
-    <% else %>
-    <%= matches.first.away_goals + matches.second.home_goals %>
-    <% end %>
-  <% else %>
-    -
-  <% end %>
-  </td>
-<% end %>
+  <%= render partial: 'competition/tournament_seasons/bracket_match_half', locals: { 
+    matches: matches, rowspan: rowspan, side: side, of_winners_bracket: of_winners_bracket, round: 1
+  } %>
 <% if with_fourth_col %>
+  <% if of_winners_bracket %>
   <td<%= raw fourth_rowspan %> style="<%= fourth_col_style %> text-align:center;">&nbsp;</td>
+  <% else %>
+  <% rowspan = rowspan ? ' rowspan="' + rowspan.to_s + '"' : '' %>
+  <td colspan="2"<%= raw rowspan %> style="border:1px solid #000000; border-left:0px; border-right:0px; <%= side == :home ? 'border-top:0px;' : 'border-bottom:0px;' %> text-align:center;">&nbsp;</td>
+  <% end %>
 <% end %>
 
 <% if of_winners_bracket && @third_place_playoff %>
   <%= render partial: 'competition/tournament_seasons/third_place_playoff', locals: { position: 'first_round_bracket_row', side: side } %>
+<% end %>
+
+<% unless of_winners_bracket %>
+  <% match = @matches[false][2].try(:[], 4).try(:[], @round_matches_index[of_winners_bracket][1]) %>
+  <%= render partial: 'competition/tournament_seasons/bracket_match_half', locals: {
+    matches: match ? round_matches_for_competitors(of_winners_bracket, 2, [match.home_competitor_id, match.away_competitor_id]) : [], 
+    rowspan: nil, side: side, of_winners_bracket: of_winners_bracket, round: 2
+  } %>
 <% end %>
 </tr>

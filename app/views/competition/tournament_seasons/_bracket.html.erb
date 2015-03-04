@@ -3,34 +3,25 @@
   <%= hidden_field_tag 'matchday', @season.current_matchday %>
   <table cellspacing="0" cellpadding="0" border="0" style="font-size:70%; margin:1em 2em 1em 1em; border-collapse: separate;">
     <tbody>
-      <tr>
-        <td>&nbsp;</td>
-  <% @winner_rounds.times do |round| %>      
-    <% with_second_leg = @with_second_leg && round + 1 != @winner_rounds ? true : false %>
-        <td style="border:1px solid #AAAAAA; background:#F2F2F2; text-align:center;" colspan="<%= with_second_leg ? 4 : 2 %>"><%= round_title(true, round + 1) %></td>
-    <% unless round + 1 == @winner_rounds %>    
-        <td colspan="2"></td>
-    <% end %>
-  <% end %>      
-      </tr>
-      <tr>
-        <td>&nbsp;</td>     
-  <% @winner_rounds.times do |round| %>      
-        <td style="width:125px;">&nbsp;</td>
-        <td style="width:40px;">&nbsp;</td>
-    <% if @with_second_leg && round + 1 != @winner_rounds %>
-        <td style="width:40px;">&nbsp;</td>
-        <td style="width:40px;">&nbsp;</td>
-    <% end %>  
-    <% unless round + 1 == @winner_rounds %>    
-        <td style="width:15px;">&nbsp;</td>
-        <td style="width:15px;">&nbsp;</td>
-    <% end %>
-  <% end %>
-      </tr>   
+      <%= render partial: 'competition/tournament_seasons/bracket_set_head', locals: { of_winners_bracket: true } %>
   <% @matches[true][1][1].each do |match| %>
-      <%= render partial: 'competition/tournament_seasons/bracket_set', locals: { of_winners_bracket: true, match: match } %>
+      <%= render partial: 'competition/tournament_seasons/bracket_set', locals: { 
+        of_winners_bracket: true, match: match, first_matchday_matches_count: @matches[true][1][1].length
+      } %>
   <% end %>
+  
+  <% if @is_double_elimination %>
+      <%= render partial: 'competition/tournament_seasons/bracket_set_head', locals: { of_winners_bracket: false } %>
+    <% @matches[false] ||= {} %> 
+    <% @round_matches_index[false] ||= { 1 => 0} %>
+    <% first_matchday_matches_count = (@matches[true][1][1].length / 2) %>
+    <% first_matchday_matches_count.times do |first_loser_round_match_index| %>
+      <% first_loser_round_match = @matches[false][1].try(:[], 2).try(:[], first_loser_round_match_index) %>
+      <%= render partial: 'competition/tournament_seasons/bracket_set', locals: { 
+        of_winners_bracket: false, match: first_loser_round_match, first_matchday_matches_count: first_matchday_matches_count
+      } %>
+    <% end %>
+  <% end %>    
     </tbody>
   </table>
   

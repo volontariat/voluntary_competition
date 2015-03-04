@@ -3,7 +3,6 @@
 <% first_leg_round_match = @matches[of_winners_bracket].has_key?(round) ? @matches[of_winners_bracket][round][first_matchday_of_round][round_matches_index] : nil %>
 <% matches = first_leg_round_match ? round_matches_for_competitors(of_winners_bracket, round, [first_leg_round_match.home_competitor_id, first_leg_round_match.away_competitor_id]) : [] %>
 <% rounds = of_winners_bracket ? @winner_rounds : @loser_rounds %>
-<% with_second_leg = @with_second_leg && round != rounds ? true : false %>
 <tr>
   <td style="height:7px;"></td>
 <% if round > 2 %>
@@ -11,32 +10,9 @@
   <td colspan="<%= (round - 2) * multiplicator %>"></td>
 <% end %>
   <td style="border:0px solid #000000; border-bottom-width:2px; text-align:center;" rowspan="2">&nbsp;</td>
-  <td style="border:1px solid #AAAAAA; border-bottom: 0px; border-right:0px; background:#F9F9F9; padding-left:1em; text-align:left;" rowspan="2">
-    <%= matches.any? ? link_to(matches.first.home_competitor.name, competition_competitor_path(matches.first.home_competitor)) : '-' %>
-  </td>
-  <td style="border:1px solid #AAAAAA; border-bottom: 0px; <%= with_second_leg ? 'border-right:0px;' : '' %> background:#F9F9F9; text-align:center;" rowspan="2">
-<% if matches.any? && matches.first.matchday == @season.current_matchday && matches.first.home_goals.blank? && @can_update_season %>
-    <input type="text" style="width:19px; position:relative; top:5px;" name="matches[<%= matches.first.id %>][home_goals]" id="matches_<%= matches.first.id %>_home_goals">   
-<% else %>    
-    <%= matches.first.try(:home_goals) || '-' %>
-  </td>
-<% end %>
-<% if with_second_leg %>
-  <td style="border:1px solid #AAAAAA; border-bottom: 0px; border-right:0px; background:#F9F9F9; text-align:center;" rowspan="2">
-  <% if matches.any? && matches.second.matchday == @season.current_matchday && matches.second.away_goals.blank? && @can_update_season %>
-    <input type="text" style="width:19px; position:relative; top:5px;" name="matches[<%= matches.second.id %>][away_goals]" id="matches_<%= matches.second.id %>_away_goals">   
-  <% else %> 
-    <%= matches.second.try(:away_goals) || '-' %>
-  <% end %>
-  </td>
-  <td style="border:1px solid #AAAAAA; border-bottom: 0px; background:#F9F9F9; text-align:center;" rowspan="2">
-  <% if matches.second.try(:home_goals).present? %>
-    <%= matches.first.home_goals + matches.second.away_goals %>
-  <% else %>
-    -
-  <% end %>    
-  </td>
-<% end %>
+  <%= render partial: 'competition/tournament_seasons/bracket_match_half', locals: { 
+    matches: matches, rowspan: 2, side: :home, of_winners_bracket: of_winners_bracket, round: round
+  } %>
 <% if rounds >= round + 1 && round_matches_index % 2 == 0 %>  
   <td rowspan="2" style="border:0px solid #000000; border-bottom-width:2px;">&nbsp;</td>
 <% end %>
@@ -55,35 +31,15 @@
 <tr>
   <td style="height:7px;"></td>
   <td style="border:0px solid #000000; border-top-width:2px; text-align:center;" rowspan="2">&nbsp;</td>
-  <td style="border:1px solid #AAAAAA; border-right:0px; background:#F9F9F9; padding-left:1em;" rowspan="2">
-    <%= matches.any? ? link_to(matches.first.away_competitor.name, competition_competitor_path(matches.first.away_competitor)) : '-' %>
-  </td>
-  <td style="border:1px solid #AAAAAA; <%= with_second_leg ? 'border-right:0px;' : '' %> background:#F9F9F9; text-align:center;" rowspan="2">
-<% if matches.any? && matches.first.matchday == @season.current_matchday && matches.first.away_goals.blank? && @can_update_season %>
-    <input type="text" style="width:19px; position:relative; top:5px;" name="matches[<%= matches.first.id %>][away_goals]" id="matches_<%= matches.first.id %>_away_goals">   
-<% else %>     
-    <%= matches.first.try(:away_goals) || '-' %>
-<% end %>
-  </td>
-<% if with_second_leg && round != rounds %>
-  <td style="border:1px solid #AAAAAA; border-right:0px; background:#F9F9F9; text-align:center;" rowspan="2">
-  <% if matches.any? && matches.second.matchday == @season.current_matchday && matches.second.home_goals.blank? && @can_update_season %>  
-    <input type="text" style="width:19px; position:relative; top:5px;" name="matches[<%= matches.second.id %>][home_goals]" id="matches_<%= matches.second.id %>_home_goals">   
-  <% else %>
-    <%= matches.second.try(:home_goals) || '-' %>
-  <% end %>
-  </td>
-  <td style="border:1px solid #AAAAAA; background:#F9F9F9; text-align:center;" rowspan="2">
-  <% if matches.second.try(:home_goals).present? %>
-    <%= matches.first.away_goals + matches.second.home_goals %>
-  <% else %>
-    -
-  <% end %>
-  </td>
-<% end %>
-
+  <%= render partial: 'competition/tournament_seasons/bracket_match_half', locals: { 
+    matches: matches, rowspan: 2, side: :away, of_winners_bracket: of_winners_bracket, round: round
+  } %>
 <% if rounds >= round + 1 && round_matches_index % 2 == 0 %>   
-  <td rowspan="<%= rowspan_for_round_connector(round) %>" style="border:2px solid #000000; border-left-width:0px;">&nbsp;</td>
+  <% rowspan = rowspan_for_round_connector(round) %>
+  <% if @is_double_elimination && of_winners_bracket && round == rounds - 1 %>
+    <% rowspan -= 2 %>
+  <% end %>
+  <td rowspan="<%= rowspan %>" style="border:2px solid #000000; border-left-width:0px;">&nbsp;</td>
 <% elsif rounds >= round + 1 && round_matches_index % 2 != 0 %>
   <td rowspan="2" style="border:0px solid #000000; border-top-width:2px;">&nbsp;</td>
 <% end %>
