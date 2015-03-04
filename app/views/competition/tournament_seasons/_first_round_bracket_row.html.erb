@@ -43,5 +43,7 @@
   <td<%= raw fourth_rowspan %> style="<%= fourth_col_style %> text-align:center;">&nbsp;</td>
 <% end %>
 
-  <%= render partial: 'competition/tournament_seasons/third_place_playoff', locals: { position: 'first_round_bracket_row', side: side } if @third_place_playoff %>
+<% if of_winners_bracket && @third_place_playoff %>
+  <%= render partial: 'competition/tournament_seasons/third_place_playoff', locals: { position: 'first_round_bracket_row', side: side } %>
+<% end %>
 </tr>

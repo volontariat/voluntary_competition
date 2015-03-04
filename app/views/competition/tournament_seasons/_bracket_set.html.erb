@@ -1,0 +1,44 @@
+<% rounds = of_winners_bracket ? @winner_rounds : @loser_rounds %>
+
+<% if @round_matches_index[of_winners_bracket][1] % 2 == 0 %>
+  <% rowspan = @round_matches_index[of_winners_bracket][1] == 0 ? nil : 2 %>
+<%= render partial: 'competition/tournament_seasons/first_round_bracket_row', locals: { 
+  of_winners_bracket: of_winners_bracket, rowspan: rowspan, side: :home, 
+  matches: round_matches_for_competitors(of_winners_bracket, 1, [match.home_competitor_id, match.away_competitor_id])
+} %>
+  <% unless @round_matches_index[of_winners_bracket][1] == 0 %>    
+<tr>
+  <td style="height:7px;"></td>
+</tr>
+  <% end %>
+<%= render partial: 'competition/tournament_seasons/first_round_bracket_row', locals: { 
+  of_winners_bracket: of_winners_bracket, rowspan: 2, side: :away, fourth_rowspan: 6, fourth_col_style: 'border:2px solid #000000; border-left-width:0px;',
+  matches: round_matches_for_competitors(of_winners_bracket, 1, [match.home_competitor_id, match.away_competitor_id])
+} %> 
+<% else %>
+<%= render partial: 'competition/tournament_seasons/first_round_bracket_row', locals: { 
+  of_winners_bracket: of_winners_bracket, with_fourth_col: false, rowspan: 2, side: :home, 
+  matches: round_matches_for_competitors(of_winners_bracket, 1, [match.home_competitor_id, match.away_competitor_id])
+} %>
+<tr>
+  <td style="height:7px;"></td>
+</tr>
+  <% rowspan = @round_matches_index[of_winners_bracket][1] == @matches[of_winners_bracket][1][1].length - 1 ? nil : 2 %>
+<%= render partial: 'competition/tournament_seasons/first_round_bracket_row', locals: { 
+  of_winners_bracket: of_winners_bracket, rowspan: rowspan, side: :away, fourth_col_style: 'border:0px solid #000000; border-top-width:2px;',
+  matches: round_matches_for_competitors(of_winners_bracket, 1, [match.home_competitor_id, match.away_competitor_id])
+} %>
+<% end %>
+  
+<% rounds.times.to_a.map{|r| r + 1}[1..-1].each do |round| %>
+  <% if match_for_round_after_first_one?(@round_matches_index[of_winners_bracket][1], round) %>
+<%= render partial: 'competition/tournament_seasons/after_first_round_bracket_match', locals: { of_winners_bracket: of_winners_bracket, round: round } %>
+    <% @round_matches_index[of_winners_bracket][round]  += 1 %>
+  <% end %>
+<% end %>
+  
+<% if of_winners_bracket && @third_place_playoff && rounds <= 3 && @round_matches_index[of_winners_bracket][1] == @matches[of_winners_bracket][1][1].length - 1 %>
+<%= render partial: 'competition/tournament_seasons/third_place_playoff', locals: { position: 'bracket' } %>
+<% end %>
+  
+<% @round_matches_index[of_winners_bracket][1] += 1 %>

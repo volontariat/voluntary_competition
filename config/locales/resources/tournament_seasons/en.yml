@@ -18,13 +18,19 @@ en:
       short_model_name: Season
       no_more_competitors_needed: No more competitors needed.
       round: Round
+      losers_round: Loser's Round
       rounds:
         round_of_16: Round of 16
         quarter_final: Quarter-finals
         semi_final: Semi-finals
+        losers_semi_finals: Loser's Semi-finals
+        losers_finals: Loser's Finals
         third_place_play_off: Third place play-off
         third_place: Third place
+        winners_finals: Winner's Finals
         final: Final
+        grand_finals: Grand Finals
+        
                 
   activerecord:
     models:

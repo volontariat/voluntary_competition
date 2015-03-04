@@ -2,6 +2,8 @@
 require 'spec_helper'
 
 describe 'competition/tournament_seasons/_bracket.html.erb' do
+  let(:is_single_elimination) { true }
+  let(:is_double_elimination) { false }
   let(:competitors_limit) { 4 }
   let(:winner_rounds) { 2 }
   let(:with_second_leg) { false }
@@ -16,6 +18,8 @@ describe 'competition/tournament_seasons/_bracket.html.erb' do
     @season.matchdays = matchdays
     assign :season, @season
     assign :can_update_season, false
+    assign :is_single_elimination, is_single_elimination
+    assign :is_double_elimination, is_double_elimination
     assign :winner_rounds, winner_rounds
     assign :with_second_leg, with_second_leg
     assign :third_place_playoff, third_place_playoff

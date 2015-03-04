@@ -1,11 +1,30 @@
 module TournamentSeasonsHelper
-  def round_title(round, rounds)
+  def round_title(of_winners_bracket, round)
+    rounds = of_winners_bracket ? @winner_rounds : (@loser_rounds - 1)
     index = rounds - round
     
-    [
-      t('tournament_seasons.general.rounds.final'), t('tournament_seasons.general.rounds.semi_final'),
-      t('tournament_seasons.general.rounds.quarter_final'), t('tournament_seasons.general.rounds.round_of_16')
-    ][index] || "#{round.ordinalize} #{t('tournament_seasons.general.round')}"  
+    title = if of_winners_bracket && @is_single_elimination
+      [
+        t('tournament_seasons.general.rounds.final'), t('tournament_seasons.general.rounds.semi_final'),
+        t('tournament_seasons.general.rounds.quarter_final'), t('tournament_seasons.general.rounds.round_of_16')
+      ]
+    elsif of_winners_bracket && @is_double_elimination
+      [
+        t('tournament_seasons.general.rounds.grand_finals'), t('tournament_seasons.general.rounds.winners_finals'), 
+        t('tournament_seasons.general.rounds.semi_final'), t('tournament_seasons.general.rounds.quarter_final'), 
+        t('tournament_seasons.general.rounds.round_of_16')
+      ]
+    else
+      [t('tournament_seasons.general.rounds.losers_finals'), t('tournament_seasons.general.rounds.losers_semi_finals')]
+    end[index] 
+    
+    return title unless title.blank?
+    
+    if of_winners_bracket
+      "#{round.ordinalize} #{t('tournament_seasons.general.round')}"
+    else
+      "#{t('tournament_seasons.general.losers_round')} #{round}"
+    end
   end
   
   def round_matches_for_competitors(of_winners_bracket, round, competitor_ids)

@@ -3,34 +3,111 @@ require 'spec_helper'
 
 describe TournamentSeasonsHelper do
   describe '#round_title' do
-    describe 'round' do
+    context 'tournament is single elimination' do
+      before :each do
+        assign :is_single_elimination, true
+        assign :winner_rounds, 5
+      end
+    
       context 'is rounds[-1]' do
         it 'returns final' do
-          expect(helper.round_title(5, 5)).to be == I18n.t('tournament_seasons.general.rounds.final')
+          expect(helper.round_title(true, 5)).to be == t('tournament_seasons.general.rounds.final')
         end
       end
       
       context 'is rounds[-2]' do
         it 'returns semi-final' do
-          expect(helper.round_title(4, 5)).to be == I18n.t('tournament_seasons.general.rounds.semi_final')
+          expect(helper.round_title(true, 4)).to be == t('tournament_seasons.general.rounds.semi_final')
         end
       end
       
       context 'is rounds[-3]' do
         it 'returns quarter-final' do
-          expect(helper.round_title(3, 5)).to be == I18n.t('tournament_seasons.general.rounds.quarter_final')
+          expect(helper.round_title(true, 3)).to be == t('tournament_seasons.general.rounds.quarter_final')
         end
       end
       
       context 'is rounds[-4]' do
         it 'returns round of 16' do
-          expect(helper.round_title(2, 5)).to be == I18n.t('tournament_seasons.general.rounds.round_of_16')
+          expect(helper.round_title(true, 2)).to be == t('tournament_seasons.general.rounds.round_of_16')
         end
       end
       
       context 'is 1 of 5' do
         it 'returns #{round.ordinalize} Round' do
-          expect(helper.round_title(1, 5)).to be == "1st #{t('tournament_seasons.general.round')}"
+          expect(helper.round_title(true, 1)).to be == "1st #{t('tournament_seasons.general.round')}"
+        end
+      end
+    end
+    
+    context 'tournament is double elimination' do
+      before :each do
+        assign :is_double_elimination, true  
+      end
+      
+      context 'winner round title' do
+        before :each do
+          assign :winner_rounds, 6
+        end
+      
+        context 'is rounds[-1]' do
+          it 'returns grand finals' do
+            expect(helper.round_title(true, 6)).to be == t('tournament_seasons.general.rounds.grand_finals')
+          end
+        end
+        
+        context 'is rounds[-2]' do
+          it 'returns winners finals' do
+            expect(helper.round_title(true, 5)).to be == t('tournament_seasons.general.rounds.winners_finals')
+          end
+        end
+        
+        context 'is rounds[-3]' do
+          it 'returns semi-final' do
+            expect(helper.round_title(true, 4)).to be == t('tournament_seasons.general.rounds.semi_final')
+          end
+        end
+        
+        context 'is rounds[-4]' do
+          it 'returns quarter-final' do
+            expect(helper.round_title(true, 3)).to be == t('tournament_seasons.general.rounds.quarter_final')
+          end
+        end
+        
+        context 'is rounds[-5]' do
+          it 'returns round of 16' do
+            expect(helper.round_title(true, 2)).to be == t('tournament_seasons.general.rounds.round_of_16')
+          end
+        end
+        
+        context 'is 1 of 6' do
+          it 'returns #{round.ordinalize} Round' do
+            expect(helper.round_title(true, 1)).to be == "1st #{t('tournament_seasons.general.round')}"
+          end
+        end
+      end
+      
+      context 'loser round title' do
+        before :each do
+          assign :loser_rounds, 4
+        end
+      
+        context 'is rounds[-1]' do
+          it 'returns losers finals' do
+            expect(helper.round_title(false, 3)).to be == t('tournament_seasons.general.rounds.losers_finals')
+          end
+        end
+        
+        context 'is rounds[-2]' do
+          it 'returns losers semi-finals' do
+            expect(helper.round_title(false, 2)).to be == t('tournament_seasons.general.rounds.losers_semi_finals')
+          end
+        end
+        
+        context 'is 1 of 3' do
+          it 'returns Losers Round 1' do
+            expect(helper.round_title(false, 1)).to be == "#{t('tournament_seasons.general.losers_round')} 1"
+          end
         end
       end
     end
