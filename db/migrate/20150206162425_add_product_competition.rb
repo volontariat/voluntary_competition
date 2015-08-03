@@ -1,8 +1,8 @@
 class AddProductCompetition < ActiveRecord::Migration
   def up
-    if Product.where(name: 'Competition').first
+    if Product::Competition.first
     else
-      Product.create(name: 'Competition', text: 'Dummy') 
+      Product::Competition.create(name: 'Competition', text: 'Dummy') 
     end
     
     create_table :games do |t|
@@ -120,7 +120,7 @@ class AddProductCompetition < ActiveRecord::Migration
   end
   
   def down
-    Product.where(name: 'Competition').first.destroy
+    Product::Competition.first.destroy
 
     drop_table :games    
     drop_table :exercise_types

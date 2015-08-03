@@ -1,9 +1,9 @@
 # This migration comes from voluntary_competition_engine (originally 20150206162425)
 class AddProductCompetition < ActiveRecord::Migration
   def up
-    if Product.where(name: 'Competition').first
+    if Product::Competition.first
     else
-      Product.create(name: 'Competition', text: 'Dummy') 
+      Product::Competition.create(name: 'Competition', text: 'Dummy') 
     end
     
     create_table :games do |t|
