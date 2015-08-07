@@ -1,0 +1,18 @@
+before_install:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+language: ruby  
+rvm:
+  - "2.2.0"
+services:
+  - mongodb
+addons:
+  code_climate:
+    repo_token: 13496c5fa47c139a344a6f983adfb4f5fbf092569b73d5ce5dc550660da1e4c2
+script:
+  - cd dummy
+  - ln -s ../.git .git
+  - cp config/database.travis.yml config/database.yml
+  - RAILS_ENV=test bundle exec rake db:create
+  - bundle exec rake db:test:prepare
+  - CODECLIMATE_REPO_TOKEN=13496c5fa47c139a344a6f983adfb4f5fbf092569b73d5ce5dc550660da1e4c2 bundle exec rspec

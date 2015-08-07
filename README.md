@@ -1,2 +1,3 @@
-# voluntary_competition
-Competition product with tournament management for crowdsourcing engine voluntary
+# voluntary_competition [![Build Status](https://travis-ci.org/volontariat/voluntary_competition.svg?branch=master)](https://travis-ci.org/volontariat/voluntary_competition) [![Code Climate](https://codeclimate.com/github/volontariat/voluntary_competition/badges/gpa.svg)](https://codeclimate.com/github/volontariat/voluntary_competition) [![Test Coverage](https://codeclimate.com/github/volontariat/voluntary_competition/badges/coverage.svg)](https://codeclimate.com/github/volontariat/voluntary_competition) [![Dependency Status](https://gemnasium.com/volontariat/voluntary_competition.png)](https://gemnasium.com/volontariat/voluntary_competition)
+
+Competition product with tournament management for crowdsourcing management system http://Voluntary.Software.
