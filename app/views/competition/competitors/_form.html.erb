@@ -1,12 +1,12 @@
-<%= simple_form_for([:competition, @competitor], html: {class: 'form-horizontal'}) do |f| %>
+<%= simple_form_for([:competition, @competitor], html: {class: 'form-horizontal'}, wrapper: :horizontal_form) do |f| %>
   <%= render partial: 'shared/form/error_messages', locals: { resource: @competitor } %>
   
-  <div class="form-inputs">
-    <%= render partial: 'shared/game_and_exercise_type_association', locals: { f: f } %>
-    <%= f.input :name %>
-  </div>
+  <%= render partial: 'shared/game_and_exercise_type_association', locals: { f: f } %>
+  <%= f.input :name %>
   
-  <div class="form-actions">
-    <%= f.button :submit %>
+  <div class="form-group">
+    <div class="col-sm-offset-3 col-sm-9">
+      <%= f.button :submit %>
+    </div>
   </div>
 <% end %>

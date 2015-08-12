@@ -1,28 +1,28 @@
 <%= simple_form_for([:competition, @tournament], html: {class: 'form-horizontal'}) do |f| %>
   <%= render partial: 'shared/form/error_messages', locals: { resource: @tournament } %>
+
+  <%= render partial: 'shared/game_and_exercise_type_association', locals: { f: f } %>
+  <%= f.input :system_type, as: :radio_buttons, collection: Tournament::SYSTEM_TYPES.each_with_index.map { |x,i| [x.titleize, i] } if f.object.new_record? %>
+  <%= f.input :name %>
   
-  <div class="form-inputs">
-    <%= render partial: 'shared/game_and_exercise_type_association', locals: { f: f } %>
-    <%= f.input :system_type, as: :radio_buttons, collection: Tournament::SYSTEM_TYPES.each_with_index.map { |x,i| [x.titleize, i] } if f.object.new_record? %>
-    <%= f.input :name %>
-    
-    <% if f.object.new_record? %>
-    <%= f.input :competitors_limit %>
-    <%= f.input :with_second_leg %>
-    <div id="tournament_with_group_stage_wrapper" style="display: <%= @tournament.is_round_robin? ? 'none' : 'block' %>;">
-      <%= f.input :with_group_stage %>
-    </div>
-    <div id="tournament_groups_count_wrapper" style="display: <%= @tournament.is_round_robin? ? 'none' : 'block' %>;">
-      <%= f.input :groups_count %>
-    </div>
-    <div id="tournament_third_place_playoff_wrapper" style="display: <%= @tournament.is_round_robin? ? 'none' : 'block' %>;">
-      <%= f.input :third_place_playoff %>
-    </div>
-    <%= f.input :first_season_name %>
-    <% end %>
+  <% if f.object.new_record? %>
+  <%= f.input :competitors_limit %>
+  <%= f.input :with_second_leg %>
+  <div id="tournament_with_group_stage_wrapper" style="display: <%= @tournament.is_round_robin? ? 'none' : 'block' %>;">
+    <%= f.input :with_group_stage %>
   </div>
+  <div id="tournament_groups_count_wrapper" style="display: <%= @tournament.is_round_robin? ? 'none' : 'block' %>;">
+    <%= f.input :groups_count %>
+  </div>
+  <div id="tournament_third_place_playoff_wrapper" style="display: <%= @tournament.is_round_robin? ? 'none' : 'block' %>;">
+    <%= f.input :third_place_playoff %>
+  </div>
+  <%= f.input :first_season_name %>
+  <% end %>
   
-  <div class="form-actions">
-    <%= f.button :submit %>
+  <div class="form-group">
+    <div class="col-sm-offset-3 col-sm-9">
+      <%= f.button :submit %>
+    </div>
   </div>
 <% end %>
